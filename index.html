@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>今日のスケジュール</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗓️</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="stats-bar" id="stats-bar">
+  <div class="stat">
+    <span class="stat-label">日付</span>
+    <span class="stat-value" id="stat-date">-</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">今日のタスク</span>
+    <span class="stat-value" id="stat-total">0</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">完了</span>
+    <span class="stat-value" id="stat-done">0</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">達成率</span>
+    <span class="stat-value" id="stat-rate">0%</span>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="schedule-panel">
+    <h2 class="panel-title">タイムスケジュール</h2>
+    <div class="schedule-settings">
+      <label for="day-start-input">表示時間</label>
+      <select id="day-start-input"></select>
+      <span>〜</span>
+      <select id="day-end-input"></select>
+    </div>
+    <div class="schedule-head">
+      <div class="schedule-head-spacer"></div>
+      <div class="schedule-head-label">予定<span class="schedule-head-hint">（薄い枠＝リスケ前）</span></div>
+      <div class="schedule-head-label">実績</div>
+    </div>
+    <div class="schedule-grid" id="schedule-grid">
+      <div class="time-col" id="time-col"></div>
+      <div class="plan-col" id="plan-col"></div>
+      <div class="actual-col" id="actual-col"></div>
+    </div>
+  </section>
+
+  <section class="task-panel">
+    <h2 class="panel-title">タスク</h2>
+    <form class="task-add-form" id="task-add-form">
+      <input type="text" id="task-name-input" placeholder="タスク名を入力" required>
+      <select id="task-duration-input">
+        <option value="30">30分</option>
+        <option value="60" selected>60分</option>
+        <option value="90">90分</option>
+        <option value="120">120分</option>
+      </select>
+      <select id="task-start-input">
+        <option value="">開始時刻（任意）</option>
+      </select>
+      <button type="submit">追加</button>
+    </form>
+    <ul class="task-list" id="task-list"></ul>
+  </section>
+</main>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-title">予定を追加</h3>
+    <form id="block-form">
+      <div class="form-row">
+        <label>開始</label>
+        <select id="block-start"></select>
+        <label>終了</label>
+        <select id="block-end"></select>
+      </div>
+      <div class="form-row">
+        <label>予定</label>
+        <input type="text" id="block-plan-text" placeholder="例：図面作成" required>
+      </div>
+      <div class="original-info" id="original-info"></div>
+
+      <hr>
+      <h4>実績</h4>
+      <div class="form-row">
+        <label>実績開始</label>
+        <select id="block-actual-start"></select>
+        <label>実績終了</label>
+        <select id="block-actual-end"></select>
+      </div>
+      <div class="form-row">
+        <label>内容</label>
+        <input type="text" id="block-actual-text" placeholder="実際に行った内容">
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" id="block-delete-btn" class="btn-danger">削除</button>
+        <div class="modal-actions-right">
+          <button type="button" id="block-cancel-btn" class="btn-secondary">キャンセル</button>
+          <button type="submit" class="btn-primary">保存</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
