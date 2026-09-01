@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>役所調査ログ</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏢</text></svg>">
+<link rel="stylesheet" href="css/style.css?v=5">
+</head>
+<body>
+<header class="app-header">
+  <h1 class="app-title">役所調査ログ</h1>
+</header>
+
+<main class="layout">
+
+  <!-- 案件一覧 画面 -->
+  <section class="view" id="view-projects">
+    <div class="view-head">
+      <h2 class="view-title">案件一覧</h2>
+      <button type="button" class="btn-primary" id="new-project-btn">＋ 新しい案件</button>
+    </div>
+    <div class="project-list" id="project-list"></div>
+  </section>
+
+  <!-- 案件詳細 画面 -->
+  <section class="view" id="view-logs" hidden>
+    <button type="button" class="back-btn" id="back-to-projects-btn">← 案件一覧へ戻る</button>
+
+    <div class="project-header">
+      <div class="project-header-main">
+        <h2 class="project-name" id="project-name-display"></h2>
+        <p class="project-location" id="project-location-display"></p>
+        <p class="project-startdate" id="project-startdate-display"></p>
+        <p class="project-memo" id="project-memo-display"></p>
+      </div>
+      <div class="project-header-actions">
+        <button type="button" class="btn-secondary" id="edit-project-btn">案件を編集</button>
+        <button type="button" class="btn-danger" id="delete-project-btn">案件を削除</button>
+      </div>
+    </div>
+
+    <h3 class="detail-section-title">役所調査項目</h3>
+    <p class="checklist-progress" id="checklist-progress"></p>
+    <div class="checklist-categories" id="checklist-categories"></div>
+
+    <h3 class="detail-section-title">調査ログ</h3>
+
+    <div class="log-add-bar">
+      <button type="button" class="btn-primary" id="new-log-btn">＋ 確認事項を記録</button>
+    </div>
+
+    <div class="filter-bar">
+      <div class="filter-field">
+        <label for="filter-department">課・部署</label>
+        <select id="filter-department"><option value="">すべて</option></select>
+      </div>
+      <div class="filter-field">
+        <label for="filter-item">確認項目</label>
+        <select id="filter-item"><option value="">すべて</option></select>
+      </div>
+      <div class="filter-field filter-field-keyword">
+        <label for="filter-keyword">キーワード</label>
+        <input type="text" id="filter-keyword">
+      </div>
+      <button type="button" class="btn-secondary filter-clear-btn" id="filter-clear-btn">クリア</button>
+    </div>
+
+    <div class="log-list-head">
+      <div class="log-cell log-cell-date">日付</div>
+      <div class="log-cell log-cell-department">課・部署</div>
+      <div class="log-cell log-cell-person">担当者</div>
+      <div class="log-cell log-cell-item">確認項目</div>
+      <div class="log-cell log-cell-content">確認内容・回答</div>
+      <div class="log-cell log-cell-pdf">PDF</div>
+      <div class="log-cell log-cell-actions"></div>
+    </div>
+    <div class="log-list" id="log-list"></div>
+  </section>
+</main>
+
+<!-- 案件 追加/編集 モーダル -->
+<div class="modal-overlay" id="project-modal-overlay">
+  <div class="modal">
+    <h3 id="project-modal-title">新しい案件</h3>
+    <form id="project-form">
+      <div class="form-row">
+        <label for="project-name-input">案件名</label>
+        <input type="text" id="project-name-input" required>
+      </div>
+      <div class="form-row">
+        <label for="project-location-input">所在地（地名地番）</label>
+        <input type="text" id="project-location-input">
+      </div>
+      <div class="form-row">
+        <label for="project-start-date-input">着工予定日</label>
+        <input type="date" id="project-start-date-input">
+      </div>
+      <div class="form-row form-row-block">
+        <label for="project-memo-input">メモ</label>
+        <textarea id="project-memo-input" rows="3"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="project-cancel-btn">キャンセル</button>
+        <button type="submit" class="btn-primary">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 調査ログ 追加/編集 モーダル -->
+<div class="modal-overlay" id="log-modal-overlay">
+  <div class="modal">
+    <h3 id="log-modal-title">確認事項を記録</h3>
+    <form id="log-form">
+      <div class="form-row">
+        <label for="log-date-input">日付</label>
+        <input type="date" id="log-date-input" required>
+      </div>
+      <div class="form-row">
+        <label for="log-department-input">課・部署名</label>
+        <input type="text" id="log-department-input" list="department-options" required>
+        <datalist id="department-options"></datalist>
+      </div>
+      <div class="form-row">
+        <label for="log-person-input">担当者名</label>
+        <input type="text" id="log-person-input">
+      </div>
+      <div class="form-row">
+        <label for="log-item-input">確認項目</label>
+        <select id="log-item-input" required></select>
+      </div>
+
+      <div class="form-row form-row-block" id="log-content-row">
+        <label for="log-content-input">確認内容・回答</label>
+        <textarea id="log-content-input" rows="3"></textarea>
+      </div>
+
+      <div class="form-row form-row-block special-field-group" id="log-zoning-group" hidden>
+        <label>用途地域（複数選択可）</label>
+        <div class="checkbox-grid" id="log-zoning-checkboxes"></div>
+      </div>
+
+      <div class="form-row form-row-block special-field-group" id="log-coverage-far-group" hidden>
+        <label>建蔽率・容積率</label>
+        <div class="dual-field">
+          <div class="dual-field-item">
+            <span class="dual-field-label">建蔽率</span>
+            <input type="text" id="log-coverage-input" inputmode="decimal">
+            <span class="dual-field-unit">％</span>
+          </div>
+          <div class="dual-field-item">
+            <span class="dual-field-label">容積率</span>
+            <input type="text" id="log-far-input" inputmode="decimal">
+            <span class="dual-field-unit">％</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="special-field-group" id="log-road-info-group" hidden>
+        <div class="form-row">
+          <label for="log-road-type-input">道路種別</label>
+          <input type="text" id="log-road-type-input">
+        </div>
+        <div class="form-row">
+          <label for="log-road-width-input">道路幅員</label>
+          <input type="text" id="log-road-width-input">
+        </div>
+        <div class="form-row">
+          <label for="log-road-frontage-status-input">接道状況</label>
+          <input type="text" id="log-road-frontage-status-input">
+        </div>
+        <div class="form-row">
+          <label for="log-road-name-input">道路名称</label>
+          <input type="text" id="log-road-name-input">
+        </div>
+        <div class="form-row form-row-block">
+          <label for="log-road-other-input">その他確認事項</label>
+          <textarea id="log-road-other-input" rows="2"></textarea>
+        </div>
+      </div>
+
+      <div class="form-row form-row-block">
+        <label for="log-memo-input">メモ</label>
+        <textarea id="log-memo-input" rows="2"></textarea>
+      </div>
+      <div class="form-row form-row-block">
+        <label for="log-pdf-input">PDF添付</label>
+        <div class="pdf-field">
+          <input type="file" id="log-pdf-input" accept="application/pdf">
+          <div class="pdf-current" id="log-pdf-current" hidden>
+            <span class="pdf-current-name" id="log-pdf-current-name"></span>
+            <button type="button" class="icon-btn" id="log-pdf-open-btn">開く</button>
+            <button type="button" class="icon-btn icon-btn-danger" id="log-pdf-remove-btn">削除</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-danger" id="log-delete-btn">削除</button>
+        <div class="modal-actions-right">
+          <button type="button" class="btn-secondary" id="log-cancel-btn">キャンセル</button>
+          <button type="submit" class="btn-primary">保存</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/app.js?v=5"></script>
+</body>
+</html>
