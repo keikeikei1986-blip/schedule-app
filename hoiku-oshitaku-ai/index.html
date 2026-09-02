@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>保育園おしたくAI</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- 画面1: スタート -->
+  <section class="screen active" data-screen="start">
+    <button id="settings-btn-start" class="icon-btn settings-icon" aria-label="おうちの人向け設定">⚙️</button>
+
+    <div class="character talking-capable" id="character-start">
+      <div class="char-hair-back"></div>
+      <div class="char-head">
+        <div class="char-cheek left"></div>
+        <div class="char-cheek right"></div>
+        <div class="char-eyes">
+          <span class="char-eye"></span>
+          <span class="char-eye"></span>
+        </div>
+        <div class="char-mouth"></div>
+      </div>
+      <div class="char-hair-front"></div>
+      <div class="char-body"></div>
+    </div>
+
+    <div class="speech-bubble" id="start-bubble">おはよう！</div>
+
+    <button id="start-btn" class="big-btn primary-btn">🌞 朝の準備をはじめる</button>
+  </section>
+
+  <!-- 画面2: AI会話（ミッション進行） -->
+  <section class="screen" data-screen="chat">
+    <div class="top-bar">
+      <div class="progress-wrap">
+        <div class="progress-label" id="progress-label">あさのミッション 0 / 0</div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+      <div class="mini-puzzle" id="mini-puzzle" aria-label="パズルのすすみぐあい"></div>
+    </div>
+
+    <div class="character talking-capable" id="character-chat">
+      <div class="char-hair-back"></div>
+      <div class="char-head">
+        <div class="char-cheek left"></div>
+        <div class="char-cheek right"></div>
+        <div class="char-eyes">
+          <span class="char-eye"></span>
+          <span class="char-eye"></span>
+        </div>
+        <div class="char-mouth"></div>
+      </div>
+      <div class="char-hair-front"></div>
+      <div class="char-body"></div>
+    </div>
+
+    <div class="speech-bubble" id="chat-bubble">じゅんびはいいかな？</div>
+
+    <div class="mission-actions">
+      <p class="voice-hint" id="voice-hint">こえでこたえてね（ボタンでもOK！）</p>
+      <button id="mic-btn" class="mic-btn" aria-label="はなす">🎤</button>
+      <div class="answer-buttons">
+        <button class="answer-btn done-btn" data-answer="done" type="button">✅ できた！</button>
+        <button class="answer-btn wait-btn" data-answer="wait" type="button">⏳ まだだよ</button>
+        <button class="answer-btn unsure-btn" data-answer="unsure" type="button">❓ わからない</button>
+      </div>
+    </div>
+    <p class="mic-status" id="mic-status" aria-live="polite"></p>
+  </section>
+
+  <!-- 画面3: パズル完成 -->
+  <section class="screen" data-screen="complete">
+    <h1 class="complete-title">🎉 コンプリート！ 🎉</h1>
+    <div class="puzzle-full" id="puzzle-full"></div>
+
+    <div class="character talking-capable small" id="character-complete">
+      <div class="char-hair-back"></div>
+      <div class="char-head">
+        <div class="char-cheek left"></div>
+        <div class="char-cheek right"></div>
+        <div class="char-eyes">
+          <span class="char-eye"></span>
+          <span class="char-eye"></span>
+        </div>
+        <div class="char-mouth"></div>
+      </div>
+      <div class="char-hair-front"></div>
+      <div class="char-body"></div>
+    </div>
+
+    <div class="speech-bubble" id="complete-bubble">全部できたね！</div>
+
+    <button id="go-btn" class="big-btn primary-btn">🏫 保育園に行こう！</button>
+    <button id="restart-btn" class="text-btn" type="button">もういちどはじめから</button>
+  </section>
+
+  <!-- 画面4: おうちの人向け設定 -->
+  <section class="screen" data-screen="settings">
+    <div class="settings-header">
+      <button id="settings-back-btn" class="icon-btn" aria-label="もどる">←</button>
+      <h2>おうちの人向け設定</h2>
+    </div>
+
+    <label class="settings-field">
+      <span>子どものなまえ</span>
+      <input type="text" id="child-name-input" maxlength="10" placeholder="例：たろう">
+    </label>
+
+    <h3 class="settings-subheading">使うミッション（ON/OFF・順番）</h3>
+    <ul id="mission-settings-list" class="mission-settings-list"></ul>
+  </section>
+
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/voice-engine.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

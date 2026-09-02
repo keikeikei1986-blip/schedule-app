@@ -1,0 +1,576 @@
+:root {
+  --color-bg: #fff6e9;
+  --color-sky: #cdeeff;
+  --color-primary: #ff8a65;
+  --color-primary-dark: #f4703f;
+  --color-secondary: #4fb0e8;
+  --color-wait: #ffc857;
+  --color-unsure: #b39ddb;
+  --color-text: #4a3b30;
+  --color-card: #ffffff;
+  --color-border: #ffd9b3;
+  --radius-lg: 28px;
+  --radius-md: 18px;
+  --shadow-soft: 0 8px 20px rgba(180, 120, 60, 0.15);
+  font-size: 18px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: linear-gradient(180deg, var(--color-sky) 0%, var(--color-bg) 45%);
+  font-family: "Hiragino Maru Gothic ProN", "BIZ UDPGothic", "Yu Gothic", "Hiragino Kaku Gothic ProN", sans-serif;
+  color: var(--color-text);
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+#app {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+  background: var(--color-bg);
+  position: relative;
+  overflow-x: hidden;
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- 画面切り替え ---------- */
+
+.screen {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 20px 32px;
+  flex: 1;
+  gap: 16px;
+  position: relative;
+}
+
+.screen.active {
+  display: flex;
+}
+
+/* ---------- ボタン共通 ---------- */
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  color: inherit;
+}
+
+.big-btn {
+  width: 100%;
+  min-height: 72px;
+  font-size: 1.35rem;
+  font-weight: 700;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.big-btn:active {
+  transform: scale(0.96);
+  box-shadow: 0 4px 10px rgba(180, 120, 60, 0.18);
+}
+
+.primary-btn {
+  background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: #fff;
+}
+
+.text-btn {
+  background: transparent;
+  color: var(--color-secondary);
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-decoration: underline;
+  padding: 8px;
+}
+
+.icon-btn {
+  background: var(--color-card);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-icon {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+
+/* ---------- キャラクター（優しいお姉さん） ---------- */
+
+.character {
+  --skin: #ffe0c2;
+  --hair: #a5673f;
+  --ribbon: #ff8a65;
+  position: relative;
+  width: 200px;
+  height: 220px;
+  margin-top: 8px;
+  animation: char-bob 3.2s ease-in-out infinite;
+}
+
+.character.small {
+  width: 140px;
+  height: 154px;
+  transform-origin: center;
+}
+
+@keyframes char-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.char-body {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 150px;
+  height: 90px;
+  background: var(--ribbon);
+  border-radius: 60px 60px 20px 20px;
+}
+
+.char-body::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 26px;
+  height: 26px;
+  background: #ffd54f;
+  border-radius: 6px;
+  box-shadow: 0 0 0 4px var(--ribbon);
+}
+
+.char-hair-back {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 148px;
+  height: 130px;
+  background: var(--hair);
+  border-radius: 50% 50% 40% 40%;
+}
+
+.char-head {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 128px;
+  height: 118px;
+  background: var(--skin);
+  border-radius: 50%;
+  z-index: 2;
+}
+
+.char-hair-front {
+  position: absolute;
+  top: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 132px;
+  height: 46px;
+  background: var(--hair);
+  border-radius: 50% 50% 60% 60% / 60% 60% 40% 40%;
+  z-index: 3;
+}
+
+.char-eyes {
+  position: absolute;
+  top: 54px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 74px;
+  display: flex;
+  justify-content: space-between;
+  z-index: 4;
+}
+
+.char-eye {
+  width: 14px;
+  height: 16px;
+  background: #4a3b30;
+  border-radius: 50%;
+  animation: char-blink 4.4s ease-in-out infinite;
+}
+
+@keyframes char-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.15); }
+}
+
+.char-cheek {
+  position: absolute;
+  top: 72px;
+  width: 18px;
+  height: 12px;
+  background: #ffb199;
+  border-radius: 50%;
+  opacity: 0.75;
+  z-index: 4;
+  filter: blur(1px);
+}
+
+.char-cheek.left { left: 12px; }
+.char-cheek.right { right: 12px; }
+
+.char-mouth {
+  position: absolute;
+  top: 82px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 26px;
+  height: 12px;
+  border-bottom: 4px solid #d9765f;
+  border-radius: 0 0 20px 20px;
+  z-index: 4;
+  transition: height 0.12s ease, width 0.12s ease;
+}
+
+.character.talking .char-mouth {
+  animation: char-talk 0.32s ease-in-out infinite;
+}
+
+@keyframes char-talk {
+  0%, 100% { height: 12px; width: 26px; }
+  50% { height: 20px; width: 20px; }
+}
+
+.character.listening {
+  filter: drop-shadow(0 0 14px rgba(79, 176, 232, 0.55));
+}
+
+/* ---------- 吹き出し ---------- */
+
+.speech-bubble {
+  background: var(--color-card);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+  box-shadow: var(--shadow-soft);
+  border: 3px solid var(--color-border);
+  white-space: pre-line;
+  min-height: 1.5em;
+}
+
+/* ---------- スタート画面 ---------- */
+
+[data-screen="start"] {
+  justify-content: center;
+  text-align: center;
+}
+
+/* ---------- 会話画面 ---------- */
+
+[data-screen="chat"] {
+  padding-top: 16px;
+}
+
+.top-bar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress-wrap {
+  flex: 1;
+}
+
+.progress-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  margin-bottom: 6px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 14px;
+  background: #ffe6cc;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--color-secondary), var(--color-primary));
+  transition: width 0.5s ease;
+}
+
+.mini-puzzle {
+  width: 76px;
+  height: 46px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  position: relative;
+  box-shadow: var(--shadow-soft);
+  flex-shrink: 0;
+}
+
+.mission-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-top: auto;
+}
+
+.mic-btn {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: var(--color-secondary);
+  color: #fff;
+  font-size: 2.2rem;
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease;
+}
+
+.mic-btn:active {
+  transform: scale(0.94);
+}
+
+.mic-btn.listening {
+  animation: mic-pulse 1s ease-in-out infinite;
+}
+
+@keyframes mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(79, 176, 232, 0.5); }
+  50% { box-shadow: 0 0 0 16px rgba(79, 176, 232, 0); }
+}
+
+.mic-btn.unsupported {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.voice-hint {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-secondary);
+  text-align: center;
+}
+
+.answer-buttons {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.answer-btn {
+  min-height: 68px;
+  border-radius: var(--radius-md);
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #fff;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.15s ease;
+}
+
+.answer-btn:active {
+  transform: scale(0.95);
+}
+
+.done-btn { background: #6bcb77; }
+.wait-btn { background: var(--color-wait); color: var(--color-text); }
+.unsure-btn { background: var(--color-unsure); }
+
+.mic-status {
+  min-height: 1.4em;
+  font-size: 0.9rem;
+  color: var(--color-primary-dark);
+  font-weight: 600;
+  text-align: center;
+  margin: 0;
+}
+
+/* ---------- パズル（ミニ／フル共通の中身） ---------- */
+
+.puzzle-art {
+  position: absolute;
+  inset: 0;
+}
+
+.puzzle-art svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.puzzle-covers {
+  position: absolute;
+  inset: 0;
+  display: grid;
+}
+
+.puzzle-cover {
+  background: #d9c7b3;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.puzzle-cover.revealed {
+  opacity: 0;
+  transform: scale(0.4) rotate(12deg);
+  pointer-events: none;
+}
+
+.puzzle-full {
+  width: 100%;
+  max-width: 340px;
+  aspect-ratio: 200 / 120;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  position: relative;
+  box-shadow: var(--shadow-soft);
+  border: 4px solid #fff;
+}
+
+/* ---------- 完成画面 ---------- */
+
+[data-screen="complete"] {
+  text-align: center;
+  justify-content: flex-start;
+}
+
+.complete-title {
+  font-size: 1.8rem;
+  margin: 4px 0 0;
+  color: var(--color-primary-dark);
+}
+
+/* ---------- 設定画面 ---------- */
+
+[data-screen="settings"] {
+  align-items: stretch;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.settings-header h2 {
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.settings-field input {
+  font-size: 1.1rem;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-border);
+  background: var(--color-card);
+}
+
+.settings-subheading {
+  font-size: 1rem;
+  margin: 4px 0 0;
+  color: var(--color-primary-dark);
+}
+
+.mission-settings-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mission-setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-card);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  box-shadow: var(--shadow-soft);
+}
+
+.mission-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.02rem;
+  font-weight: 600;
+}
+
+.mission-toggle input[type="checkbox"] {
+  width: 24px;
+  height: 24px;
+  accent-color: var(--color-primary);
+}
+
+.move-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.move-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--color-bg);
+  border: 2px solid var(--color-border);
+  font-size: 0.9rem;
+}
+
+.move-btn:disabled {
+  opacity: 0.3;
+}
+
+/* ---------- 小さい画面向け調整 ---------- */
+
+@media (max-width: 360px) {
+  :root { font-size: 16px; }
+  .character { width: 170px; height: 190px; }
+}
