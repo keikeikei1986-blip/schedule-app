@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taskline</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <h1>Taskline</h1>
+</header>
+
+<section class="quick-add" aria-label="タスクを書き出す">
+  <p class="quick-add-tagline">頭の中のタスクを、まず吐き出そう。</p>
+  <form id="quick-add-form">
+    <input type="text" id="quick-add-input" placeholder="今やること、思いついたことを書いてください" maxlength="100" autocomplete="off">
+    <button type="submit" class="quick-add-btn">追加</button>
+  </form>
+</section>
+
+<section class="summary-strip" aria-label="サマリー">
+  <span class="summary-item">
+    <span class="summary-value" id="stat-today">0</span>
+    <span class="summary-label">今日</span>
+  </span>
+  <span class="summary-item">
+    <span class="summary-value" id="stat-incomplete">0</span>
+    <span class="summary-label">未完了</span>
+  </span>
+  <span class="summary-item summary-danger">
+    <span class="summary-value" id="stat-overdue">0</span>
+    <span class="summary-label">期限切れ</span>
+  </span>
+  <span class="summary-item summary-success">
+    <span class="summary-value" id="stat-done">0</span>
+    <span class="summary-label">完了</span>
+  </span>
+</section>
+
+<section class="today-section" aria-label="今日やること">
+  <h2>今日やること</h2>
+  <ul class="task-list" id="today-list"></ul>
+  <p class="empty-message" id="today-empty">今日やることはまだありません</p>
+</section>
+
+<section class="all-section" aria-label="すべてのタスク">
+  <h2>すべてのタスク</h2>
+  <ul class="task-list" id="task-list"></ul>
+  <p class="empty-message" id="list-empty">タスクがありません。上の入力欄から書き出してみましょう。</p>
+</section>
+
+<details class="completed-section" id="completed-section">
+  <summary>完了したタスク (<span id="completed-count">0</span>)</summary>
+  <ul class="task-list" id="completed-list"></ul>
+</details>
+
+<div class="modal-overlay" id="modal-overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <h2 id="modal-title">タスクの詳細</h2>
+    <form id="task-form" novalidate>
+      <input type="hidden" id="task-id">
+
+      <label for="task-title">タスク名</label>
+      <input type="text" id="task-title" maxlength="100" required>
+
+      <label for="task-memo">メモ</label>
+      <textarea id="task-memo" rows="3" maxlength="500"></textarea>
+
+      <label class="checkbox-row" for="task-today">
+        <input type="checkbox" id="task-today">
+        今日やる
+      </label>
+
+      <div class="field-row">
+        <div class="field-col">
+          <label for="task-due">期限</label>
+          <input type="date" id="task-due">
+        </div>
+        <div class="field-col">
+          <label for="task-priority">優先度</label>
+          <select id="task-priority">
+            <option value="">未設定</option>
+            <option value="high">高</option>
+            <option value="medium">中</option>
+            <option value="low">低</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-col">
+          <label for="task-category">カテゴリー</label>
+          <input type="text" id="task-category" list="category-list" maxlength="30" placeholder="例：仕事">
+          <datalist id="category-list"></datalist>
+        </div>
+        <div class="field-col">
+          <label for="task-status">ステータス</label>
+          <select id="task-status">
+            <option value="not-started">未着手</option>
+            <option value="in-progress">進行中</option>
+            <option value="on-hold">保留</option>
+            <option value="done">完了</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="form-error" id="form-error" hidden>タスク名を入力してください</p>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-danger" id="delete-task-btn">削除</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn btn-secondary" id="cancel-btn">閉じる</button>
+        <button type="submit" class="btn btn-primary">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
