@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>25分全集中</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏱️</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <h1 class="app-title">25分全集中</h1>
+  <p class="app-subcopy">この25分で、何をやる？</p>
+</header>
+
+<main class="layout">
+
+  <!-- 待機画面: テーマ入力してスタート -->
+  <section class="card timer-card" id="screen-idle">
+    <input
+      type="text"
+      id="theme-input"
+      class="theme-input"
+      placeholder="例：外構図のフェンス作成"
+      maxlength="60"
+      autocomplete="off"
+    >
+    <div class="dial">
+      <div class="timer-display" id="idle-timer-display">25:00</div>
+      <svg class="hourglass" viewBox="0 0 60 110" aria-hidden="true" focusable="false">
+        <defs>
+          <clipPath id="hg-top-idle"><polygon points="10,9 50,9 30,55"></polygon></clipPath>
+          <clipPath id="hg-bottom-idle"><polygon points="10,101 50,101 30,55"></polygon></clipPath>
+        </defs>
+        <rect class="hg-cap" x="7" y="4" width="46" height="5" rx="2"></rect>
+        <rect class="hg-cap" x="7" y="101" width="46" height="5" rx="2"></rect>
+        <path class="hg-glass" d="M10,9 L50,9 L30,55 L50,101 L10,101 L30,55 Z"></path>
+        <g clip-path="url(#hg-top-idle)">
+          <rect class="hg-sand" x="10" y="9" width="40" height="46"></rect>
+        </g>
+        <g clip-path="url(#hg-bottom-idle)">
+          <rect class="hg-sand" x="10" y="101" width="40" height="0"></rect>
+        </g>
+      </svg>
+    </div>
+    <button type="button" class="btn-start" id="start-btn">全集中スタート</button>
+  </section>
+
+  <!-- 集中中画面 -->
+  <section class="card timer-card is-hidden" id="screen-focus">
+    <p class="running-theme" id="focus-theme-display"></p>
+    <div class="dial dial-running">
+      <div class="timer-display timer-display-running" id="focus-timer-display">25:00</div>
+      <svg class="hourglass" viewBox="0 0 60 110" aria-hidden="true" focusable="false">
+        <defs>
+          <clipPath id="hg-top-focus"><polygon points="10,9 50,9 30,55"></polygon></clipPath>
+          <clipPath id="hg-bottom-focus"><polygon points="10,101 50,101 30,55"></polygon></clipPath>
+        </defs>
+        <rect class="hg-cap" x="7" y="4" width="46" height="5" rx="2"></rect>
+        <rect class="hg-cap" x="7" y="101" width="46" height="5" rx="2"></rect>
+        <path class="hg-glass" d="M10,9 L50,9 L30,55 L50,101 L10,101 L30,55 Z"></path>
+        <g clip-path="url(#hg-top-focus)">
+          <rect class="hg-sand" id="focus-hg-top" x="10" y="9" width="40" height="46"></rect>
+        </g>
+        <g clip-path="url(#hg-bottom-focus)">
+          <rect class="hg-sand" id="focus-hg-bottom" x="10" y="101" width="40" height="0"></rect>
+        </g>
+      </svg>
+    </div>
+    <div class="focus-controls">
+      <button type="button" class="btn-secondary" id="pause-btn">一時停止</button>
+      <button type="button" class="btn-secondary btn-end" id="end-btn">終了</button>
+    </div>
+  </section>
+
+  <!-- 25分終了画面 -->
+  <section class="card timer-card is-hidden" id="screen-focus-done">
+    <p class="done-headline">25分終了！</p>
+    <p class="done-summary" id="done-summary"></p>
+    <button type="button" class="btn-start" id="start-break-btn">5分休憩</button>
+  </section>
+
+  <!-- 休憩画面 -->
+  <section class="card timer-card is-hidden" id="screen-break">
+    <p class="running-theme">休憩</p>
+    <div class="dial dial-break">
+      <div class="timer-display timer-display-break" id="break-timer-display">05:00</div>
+      <svg class="hourglass" viewBox="0 0 60 110" aria-hidden="true" focusable="false">
+        <defs>
+          <clipPath id="hg-top-break"><polygon points="10,9 50,9 30,55"></polygon></clipPath>
+          <clipPath id="hg-bottom-break"><polygon points="10,101 50,101 30,55"></polygon></clipPath>
+        </defs>
+        <rect class="hg-cap" x="7" y="4" width="46" height="5" rx="2"></rect>
+        <rect class="hg-cap" x="7" y="101" width="46" height="5" rx="2"></rect>
+        <path class="hg-glass" d="M10,9 L50,9 L30,55 L50,101 L10,101 L30,55 Z"></path>
+        <g clip-path="url(#hg-top-break)">
+          <rect class="hg-sand" id="break-hg-top" x="10" y="9" width="40" height="46"></rect>
+        </g>
+        <g clip-path="url(#hg-bottom-break)">
+          <rect class="hg-sand" id="break-hg-bottom" x="10" y="101" width="40" height="0"></rect>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- 休憩終了画面 -->
+  <section class="card timer-card is-hidden" id="screen-break-done">
+    <p class="done-headline">休憩終了</p>
+    <button type="button" class="btn-start" id="next-focus-btn">次の25分へ</button>
+  </section>
+
+  <!-- 記録 -->
+  <section class="card records-card">
+    <h2 class="records-title">今日の記録</h2>
+    <div class="records-summary">
+      <div class="summary-item">
+        <span class="summary-label">今日の全集中</span>
+        <span class="summary-value" id="today-total">0分</span>
+      </div>
+      <div class="summary-item">
+        <span class="summary-label">セット数</span>
+        <span class="summary-value" id="today-sets">0セット</span>
+      </div>
+    </div>
+
+    <div class="week-chart" id="week-chart"></div>
+
+    <div class="totals-row">
+      <span id="totals-today">今日　0分</span>
+      <span id="totals-week">今週　0分</span>
+    </div>
+
+    <h3 class="log-title">集中ログ</h3>
+    <ul class="log-list" id="log-list">
+      <li class="log-empty" id="log-empty">まだ記録がありません</li>
+    </ul>
+  </section>
+
+</main>
+
+<!-- 終了確認モーダル -->
+<div class="modal-overlay is-hidden" id="end-confirm-overlay">
+  <div class="modal-card" role="alertdialog" aria-modal="true" aria-labelledby="end-confirm-title">
+    <p class="modal-title" id="end-confirm-title">集中を終了しますか？</p>
+    <p class="modal-body" id="end-confirm-body"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" id="end-confirm-cancel">キャンセル</button>
+      <button type="button" class="btn-danger" id="end-confirm-ok">終了する</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
