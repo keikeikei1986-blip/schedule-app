@@ -2,6 +2,27 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Cost & billing policy (applies to every app in this repo, current and future)
+
+Default to zero-cost development and operation. Before reaching for any external API, AI API,
+database, cloud service, or hosting provider, check whether a free-tier/no-signup option (or a
+purely client-side approach, matching this repo's existing static-site pattern) already covers the
+need.
+
+The following require the user's **explicit, prior, in-chat approval** — never do these
+proactively or as a side effect of implementing a feature, and never because a signup flow or SDK
+setup step seems to expect it:
+- Registering for a paid service or plan
+- Entering/registering a credit card or other payment method
+- Enabling usage-based/metered API billing
+- Enabling auto-recharge or auto-billing
+- Upgrading an existing account to a paid tier
+
+If a task genuinely cannot be done for free, stop before implementing and tell the user the
+concrete cost (e.g. "this would cost ~$X/month" or "usage-based billing, roughly $Y per
+1000 requests") and *why* a paid service is needed instead of a free alternative. Proceed only
+after the user says yes. This overrides any instinct to "just get it working."
+
 ## Project
 
 A single-day schedule management app ("今日のスケジュール"). Runs entirely in the browser as static

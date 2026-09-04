@@ -11,7 +11,7 @@
 
 <header class="app-header">
   <h1 class="app-title">25分全集中</h1>
-  <p class="app-subcopy">この25分で、何をやる？</p>
+  <p class="app-subcopy">この25分で、前進する。</p>
 </header>
 
 <main class="layout">
@@ -22,7 +22,7 @@
       type="text"
       id="theme-input"
       class="theme-input"
-      placeholder="例：外構図のフェンス作成"
+      placeholder="例：立面図の窓チェック"
       maxlength="60"
       autocomplete="off"
     >
@@ -76,9 +76,15 @@
 
   <!-- 25分終了画面 -->
   <section class="card timer-card is-hidden" id="screen-focus-done">
-    <p class="done-headline">25分終了！</p>
-    <p class="done-summary" id="done-summary"></p>
-    <button type="button" class="btn-start" id="start-break-btn">5分休憩</button>
+    <p class="done-headline">25分全集中 完了</p>
+    <div class="done-theme-block is-hidden" id="done-theme-block">
+      <p class="done-theme" id="done-theme-text"></p>
+      <p class="done-check">✓ 25分全集中</p>
+    </div>
+    <div class="done-actions">
+      <button type="button" class="btn-start" id="start-break-btn">5分休憩</button>
+      <button type="button" class="btn-secondary" id="skip-break-btn">次の25分へ</button>
+    </div>
   </section>
 
   <!-- 休憩画面 -->

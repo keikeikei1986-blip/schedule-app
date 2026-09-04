@@ -14,14 +14,20 @@
     breakDone: document.getElementById('screen-break-done')
   };
 
+  var appHeaderEl = document.querySelector('.app-header');
+  var recordsCardEl = document.querySelector('.records-card');
+  var RUNNING_SCREENS = { focus: true, breakScreen: true };
+
   var themeInput = document.getElementById('theme-input');
   var startBtn = document.getElementById('start-btn');
   var focusThemeDisplay = document.getElementById('focus-theme-display');
   var focusTimerDisplay = document.getElementById('focus-timer-display');
   var pauseBtn = document.getElementById('pause-btn');
   var endBtn = document.getElementById('end-btn');
-  var doneSummary = document.getElementById('done-summary');
+  var doneThemeBlock = document.getElementById('done-theme-block');
+  var doneThemeText = document.getElementById('done-theme-text');
   var startBreakBtn = document.getElementById('start-break-btn');
+  var skipBreakBtn = document.getElementById('skip-break-btn');
   var breakTimerDisplay = document.getElementById('break-timer-display');
   var nextFocusBtn = document.getElementById('next-focus-btn');
 
@@ -54,6 +60,9 @@
     Object.keys(screens).forEach(function (key) {
       screens[key].classList.toggle('is-hidden', key !== name);
     });
+    var isMinimal = !!RUNNING_SCREENS[name];
+    appHeaderEl.classList.toggle('is-hidden', isMinimal);
+    recordsCardEl.classList.toggle('is-hidden', isMinimal);
   }
 
   function formatTime(totalSeconds) {
@@ -151,6 +160,7 @@
     timer.endAt = Date.now() + FOCUS_SECONDS * 1000;
     timer.remainingMs = null;
     focusThemeDisplay.textContent = timer.theme;
+    focusThemeDisplay.classList.toggle('is-hidden', !timer.theme);
     pauseBtn.textContent = '一時停止';
     showScreen('focus');
     clearTick();
@@ -197,7 +207,12 @@
 
   function finishFocus() {
     recordSession(timer.theme, FOCUS_SECONDS, true);
-    doneSummary.textContent = (timer.theme ? timer.theme : '（無題）') + '　25分集中';
+    if (timer.theme) {
+      doneThemeText.textContent = timer.theme;
+      doneThemeBlock.classList.remove('is-hidden');
+    } else {
+      doneThemeBlock.classList.add('is-hidden');
+    }
     showScreen('focusDone');
   }
 
@@ -386,6 +401,7 @@
   });
 
   startBreakBtn.addEventListener('click', startBreak);
+  skipBreakBtn.addEventListener('click', resetToIdle);
   nextFocusBtn.addEventListener('click', resetToIdle);
 
   themeInput.addEventListener('keydown', function (e) {
