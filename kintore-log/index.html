@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>身体設計ログ</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="app-header">
+  <h1 class="app-title">身体設計ログ</h1>
+  <p class="app-subcopy">身体も、設計する。</p>
+  <button type="button" class="btn-primary btn-add" id="add-workout-btn">＋ 記録する</button>
+  <p class="record-count" id="record-count">総記録数: 0件</p>
+</header>
+
+<main class="layout">
+  <section class="panel-workouts">
+    <div class="panel-head">
+      <select id="part-filter" aria-label="部位で絞り込み">
+        <option value="">すべての部位</option>
+        <option value="胸">胸</option>
+        <option value="背中">背中</option>
+        <option value="肩">肩</option>
+        <option value="腕">腕</option>
+        <option value="脚">脚</option>
+        <option value="腹筋">腹筋</option>
+        <option value="その他">その他</option>
+      </select>
+    </div>
+    <div class="workout-feed" id="workout-feed"></div>
+  </section>
+
+  <section class="panel-weight">
+    <div class="panel-head">
+      <h2 class="panel-title">体重記録</h2>
+      <button type="button" class="btn-secondary" id="add-weight-btn">＋ 体重を記録</button>
+    </div>
+    <div class="weight-list" id="weight-list"></div>
+  </section>
+</main>
+
+<!-- 記録 追加/編集 モーダル -->
+<div class="modal-overlay" id="workout-modal-overlay" hidden>
+  <div class="modal">
+    <h3 id="workout-modal-title">記録する</h3>
+    <form id="workout-form">
+      <div class="form-row">
+        <label for="workout-part-input">部位</label>
+        <select id="workout-part-input" required>
+          <option value="胸">胸</option>
+          <option value="背中">背中</option>
+          <option value="肩">肩</option>
+          <option value="腕">腕</option>
+          <option value="脚">脚</option>
+          <option value="腹筋">腹筋</option>
+          <option value="その他">その他</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="workout-exercise-input">種目</label>
+        <input type="text" id="workout-exercise-input" list="exercise-options" placeholder="例：ベンチプレス" required autocomplete="off">
+        <datalist id="exercise-options"></datalist>
+        <p class="prev-record-hint" id="prev-record-hint" hidden></p>
+      </div>
+      <div class="form-row form-row-triple">
+        <div class="triple-field">
+          <label for="workout-weight-input">重量(kg)</label>
+          <input type="number" id="workout-weight-input" step="0.5" min="0" required>
+        </div>
+        <div class="triple-field">
+          <label for="workout-reps-input">回数</label>
+          <input type="number" id="workout-reps-input" step="1" min="1" required>
+        </div>
+        <div class="triple-field">
+          <label for="workout-sets-input">セット数</label>
+          <input type="number" id="workout-sets-input" step="1" min="1" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <label for="workout-date-input">日付</label>
+        <input type="date" id="workout-date-input" required>
+      </div>
+      <div class="form-row form-row-block">
+        <label for="workout-memo-input">メモ（任意）</label>
+        <textarea id="workout-memo-input" rows="2"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-danger" id="workout-delete-btn" hidden>削除</button>
+        <div class="modal-actions-right">
+          <button type="button" class="btn-secondary" id="workout-cancel-btn">キャンセル</button>
+          <button type="submit" class="btn-primary">保存</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 体重 追加/編集 モーダル -->
+<div class="modal-overlay" id="weight-modal-overlay" hidden>
+  <div class="modal">
+    <h3 id="weight-modal-title">体重を記録</h3>
+    <form id="weight-form">
+      <div class="form-row">
+        <label for="weight-date-input">日付</label>
+        <input type="date" id="weight-date-input" required>
+      </div>
+      <div class="form-row">
+        <label for="weight-value-input">体重(kg)</label>
+        <input type="number" id="weight-value-input" step="0.1" min="0" required>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-danger" id="weight-delete-btn" hidden>削除</button>
+        <div class="modal-actions-right">
+          <button type="button" class="btn-secondary" id="weight-cancel-btn">キャンセル</button>
+          <button type="submit" class="btn-primary">保存</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

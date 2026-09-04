@@ -1,0 +1,379 @@
+:root {
+  --bg: #f5f5f4;
+  --surface: #ffffff;
+  --text: #1d1d1f;
+  --text-secondary: #86868b;
+  --text-tertiary: #b8b8ba;
+  --border: #e6e5e2;
+  --accent: #c1490f;
+  --accent-hover: #a53d0c;
+  --danger: #c0392b;
+  --tag-bg: #ececea;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Hiragino Sans", "Yu Gothic", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- ヘッダー --- */
+
+.app-header {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 56px 20px 28px;
+  text-align: center;
+}
+
+.app-title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.app-subcopy {
+  margin: 6px 0 24px;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.btn-add {
+  font-size: 1rem;
+  padding: 13px 28px;
+}
+
+.record-count {
+  margin: 14px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  letter-spacing: 0.01em;
+}
+
+/* --- レイアウト --- */
+
+.layout {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 20px 80px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 48px;
+  align-items: start;
+}
+
+.panel-workouts,
+.panel-weight {
+  min-width: 0;
+}
+
+.panel-weight {
+  border-left: 1px solid var(--border);
+  padding-left: 24px;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.panel-title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+#part-filter {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+
+.btn-secondary {
+  background: none;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 13px;
+  font-weight: 500;
+  font-size: 0.82rem;
+}
+
+.btn-secondary:hover {
+  background: var(--tag-bg);
+  color: var(--text);
+}
+
+.btn-danger {
+  background: none;
+  color: var(--danger);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 9px 13px;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.btn-danger:hover {
+  background: rgba(192, 57, 43, 0.06);
+}
+
+/* --- 記録の積み上げフィード --- */
+
+.workout-feed {
+  display: flex;
+  flex-direction: column;
+}
+
+.empty-state {
+  color: var(--text-tertiary);
+  text-align: center;
+  padding: 48px 10px;
+  font-size: 0.88rem;
+  line-height: 1.8;
+}
+
+.date-group {
+  border-top: 1px solid var(--border);
+  padding: 22px 0;
+}
+
+.date-group:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.date-header {
+  font-weight: 600;
+  font-size: 0.92rem;
+  margin-bottom: 12px;
+  color: var(--text);
+  letter-spacing: 0.01em;
+}
+
+.part-group {
+  margin-bottom: 14px;
+}
+
+.part-group:last-child {
+  margin-bottom: 0;
+}
+
+.part-label {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--tag-bg);
+  border-radius: 5px;
+  padding: 2px 8px;
+  margin-bottom: 8px;
+}
+
+.exercise-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 3px 10px;
+  padding: 5px 0;
+}
+
+.exercise-name {
+  font-weight: 600;
+  min-width: 130px;
+  color: var(--text);
+}
+
+.exercise-detail {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+}
+
+.exercise-memo {
+  color: var(--text-tertiary);
+  font-size: 0.82rem;
+  width: 100%;
+}
+
+/* --- 体重記録 --- */
+
+.weight-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.weight-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 0.88rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.weight-row:last-child {
+  border-bottom: none;
+}
+
+.weight-date {
+  color: var(--text-tertiary);
+}
+
+.weight-value {
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* --- モーダル --- */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(29, 29, 31, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 100;
+}
+
+.modal-overlay[hidden] {
+  display: none;
+}
+
+.modal {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+  max-width: 380px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+.modal h3 {
+  margin: 0 0 18px;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 14px;
+  position: relative;
+}
+
+.form-row label {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.form-row input,
+.form-row select,
+.form-row textarea {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: 0.92rem;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--surface);
+}
+
+.form-row input:focus,
+.form-row select:focus,
+.form-row textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.form-row textarea {
+  resize: vertical;
+}
+
+.prev-record-hint {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+}
+
+.form-row-triple {
+  flex-direction: row;
+  gap: 10px;
+}
+
+.triple-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.modal-actions-right {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .panel-weight {
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+  }
+
+  .exercise-name {
+    min-width: 0;
+  }
+}
