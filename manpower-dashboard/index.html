@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="チームメンバーごとの案件負荷を見える化するマンパワー管理アプリ">
+  <title>マンパワー管理表</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">TEAM CAPACITY DASHBOARD</p>
+      <h1>マンパワー管理表</h1>
+      <p class="subtitle">誰が忙しい？誰に余力がある？<br>チームのマンパワーを一目で把握。</p>
+    </div>
+    <button type="button" class="button button-ghost danger" id="resetButton">データをリセット</button>
+  </header>
+
+  <main>
+    <section class="summary-grid" aria-label="チームサマリー">
+      <div class="summary-card status-summary">
+        <div class="section-heading compact"><div><p class="eyebrow">CURRENT STATUS</p><h2>チームの状態</h2></div><span id="summaryPeriod" class="muted"></span></div>
+        <div id="statusCounts" class="status-counts"></div>
+      </div>
+      <div class="summary-card member-ranking">
+        <div class="section-heading compact"><div><p class="eyebrow">WORKLOAD</p><h2>負荷が高いメンバー</h2></div></div>
+        <div id="memberRanking" class="ranking-list"></div>
+      </div>
+      <div class="summary-card support-card">
+        <div class="section-heading compact"><div><p class="eyebrow">SUPPORT</p><h2>応援候補</h2></div></div>
+        <div id="supportSuggestions"></div>
+      </div>
+    </section>
+
+    <section class="panel load-panel">
+      <div class="section-heading load-heading">
+        <div><p class="eyebrow">MANPOWER MAP</p><h2>人の負荷マップ</h2><p class="muted">セルは期間内の平均負荷率。赤い場所ほど応援が必要です。</p></div>
+        <div class="map-controls">
+          <div class="segmented" aria-label="表示単位"><button type="button" data-view="week" class="active">週</button><button type="button" data-view="day">日</button></div>
+          <button type="button" class="icon-button" id="prevPeriod" aria-label="前の期間">←</button>
+          <button type="button" class="button button-ghost" id="todayButton">今日</button>
+          <button type="button" class="icon-button" id="nextPeriod" aria-label="次の期間">→</button>
+        </div>
+      </div>
+      <div class="legend"><span><i class="load-none"></i>0%</span><span><i class="load-low"></i>〜50%</span><span><i class="load-mid"></i>〜80%</span><span><i class="load-high"></i>〜100%</span><span><i class="load-over"></i>101%〜</span></div>
+      <div class="map-scroll"><div id="loadMap" class="load-map"></div></div>
+    </section>
+
+    <section class="workspace-grid">
+      <div class="panel">
+        <div class="section-heading"><div><p class="eyebrow">QUICK ADD</p><h2 id="projectFormTitle">案件を追加</h2></div></div>
+        <form id="projectForm" class="form-grid">
+          <input type="hidden" id="projectId">
+          <label class="span-2">案件名<input id="projectName" required maxlength="60" placeholder="例：〇〇邸"></label>
+          <label>担当者<select id="projectMember" required></select></label>
+          <label>ボリューム<input id="projectVolume" type="number" min="0.1" step="0.1" required placeholder="40"></label>
+          <label>開始日<input id="projectStart" type="date" required></label>
+          <label>終了日<input id="projectEnd" type="date" required></label>
+          <div class="form-actions span-2"><button type="button" class="button button-ghost hidden" id="cancelProjectEdit">キャンセル</button><button class="button button-primary">保存して反映</button></div>
+        </form>
+      </div>
+      <div class="panel">
+        <div class="section-heading"><div><p class="eyebrow">MEMBERS</p><h2>メンバー管理</h2></div><button type="button" class="button button-ghost" id="addMemberButton">＋ メンバー追加</button></div>
+        <div id="memberList" class="member-list"></div>
+        <p class="footnote">基準キャパシティは30日あたりの処理量です。</p>
+      </div>
+    </section>
+
+    <section class="panel projects-panel">
+      <div class="section-heading"><div><p class="eyebrow">PROJECTS</p><h2>案件一覧</h2></div><label class="filter-label">担当者で絞り込み<select id="projectFilter"></select></label></div>
+      <div id="projectList" class="project-list"></div>
+    </section>
+  </main>
+
+  <dialog id="memberDialog">
+    <form method="dialog" id="memberForm" class="dialog-form">
+      <input type="hidden" id="memberId">
+      <div><p class="eyebrow">MEMBER</p><h2 id="memberDialogTitle">メンバーを追加</h2></div>
+      <label>名前<input id="memberName" required maxlength="30" placeholder="例：Dさん"></label>
+      <label>基準キャパシティ（30日）<input id="memberCapacity" type="number" min="1" step="1" required value="100"></label>
+      <div class="form-actions"><button type="button" class="button button-ghost" id="cancelMemberDialog">キャンセル</button><button value="default" class="button button-primary">保存</button></div>
+    </form>
+  </dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
