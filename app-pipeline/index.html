@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APP PIPELINE</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="app-header-titles">
+    <h1>APP PIPELINE</h1>
+    <p class="app-subtitle">100本の制作・公開・発信を一元管理する</p>
+  </div>
+  <button type="button" class="btn-primary btn-add-app" id="open-add-app-btn">＋ 新しいアプリを追加</button>
+</header>
+
+<main class="layout">
+
+  <section class="dashboard" id="dashboard">
+    <div class="dashboard-hero">
+      <div class="hero-label">100 APP CHALLENGE</div>
+      <div class="hero-count"><span id="dash-count">0</span><span class="hero-count-max">&nbsp;/&nbsp;100</span></div>
+      <div class="hero-progress-track">
+        <div class="hero-progress-fill" id="dash-progress-fill"></div>
+      </div>
+      <div class="hero-progress-pct" id="dash-progress-pct">0%</div>
+    </div>
+
+    <div class="dashboard-stats" id="dashboard-stats">
+      <div class="stat-card">
+        <div class="stat-card-label">総登録数</div>
+        <div class="stat-card-value" id="stat-total">0</div>
+      </div>
+      <div class="stat-card stat-card-good">
+        <div class="stat-card-label">公開済</div>
+        <div class="stat-card-value" id="stat-published">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">制作中</div>
+        <div class="stat-card-value" id="stat-inprogress">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">アイデア</div>
+        <div class="stat-card-value" id="stat-idea">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">今週公開予定</div>
+        <div class="stat-card-value" id="stat-week">0</div>
+      </div>
+      <div class="stat-card stat-card-warn" id="stat-leak-card">
+        <div class="stat-card-label">⚠ 発信漏れ</div>
+        <div class="stat-card-value" id="stat-leak">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">平均制作進捗</div>
+        <div class="stat-card-value" id="stat-avg-progress">0%</div>
+      </div>
+      <div class="stat-card stat-card-ai">
+        <div class="stat-card-label">開発AI内訳</div>
+        <div class="stat-card-value stat-card-ai-value">
+          <span>Claude Code: <b id="stat-claude">0</b></span>
+          <span>Codex: <b id="stat-codex">0</b></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="today-panel" id="today-panel">
+    <h2 class="panel-title">TODAY / 今日やること</h2>
+    <ul class="today-list" id="today-list"></ul>
+    <p class="today-empty" id="today-empty" hidden>今日やることはありません。順調です。</p>
+  </section>
+
+  <section class="controls-bar">
+    <div class="filter-chips" id="filter-chips">
+      <button type="button" class="chip is-active" data-filter="all">すべて</button>
+      <button type="button" class="chip" data-filter="アイデア">アイデア</button>
+      <button type="button" class="chip" data-filter="制作中">制作中</button>
+      <button type="button" class="chip" data-filter="公開済">公開済</button>
+      <button type="button" class="chip" data-filter="改善中">改善中</button>
+      <button type="button" class="chip chip-warn" data-filter="発信漏れ">⚠ 発信漏れ</button>
+      <button type="button" class="chip" data-filter="今週公開予定">今週公開予定</button>
+      <button type="button" class="chip" data-filter="Claude Code">Claude Code</button>
+      <button type="button" class="chip" data-filter="Codex">Codex</button>
+    </div>
+    <div class="controls-right">
+      <input type="search" id="search-input" placeholder="アプリ名・メモで検索">
+      <select id="sort-select">
+        <option value="no">No.順</option>
+        <option value="new">新しい順</option>
+        <option value="old">古い順</option>
+        <option value="progress-desc">進捗が高い順</option>
+        <option value="progress-asc">進捗が低い順</option>
+        <option value="deadline">公開予定日が近い順</option>
+      </select>
+    </div>
+  </section>
+
+  <section class="table-panel">
+    <div class="table-scroll">
+      <table class="app-table">
+        <thead>
+          <tr>
+            <th class="col-name">No.・アプリ名</th>
+            <th>開発AI</th>
+            <th>現在工程</th>
+            <th class="col-progress">制作進捗</th>
+            <th>公開予定日</th>
+            <th class="col-check" title="GitHub Pages公開">公開</th>
+            <th class="col-check" title="X投稿">X</th>
+            <th class="col-check" title="WordPress掲載">WP</th>
+            <th class="col-check" title="Note投稿">Note</th>
+            <th class="col-check" title="YouTube投稿">YT</th>
+            <th class="col-check" title="Instagram投稿">IG</th>
+            <th class="col-next">次にやること</th>
+          </tr>
+        </thead>
+        <tbody id="app-table-body"></tbody>
+      </table>
+    </div>
+    <p class="table-empty" id="table-empty" hidden>該当するアプリがありません。</p>
+  </section>
+
+</main>
+
+<!-- 新規アプリ追加モーダル -->
+<div class="modal-overlay" id="add-app-overlay">
+  <div class="modal">
+    <h3>新しいアプリを追加</h3>
+    <form id="add-app-form">
+      <div class="form-row">
+        <label for="new-app-name">アプリ名</label>
+        <input type="text" id="new-app-name" required>
+      </div>
+      <div class="form-row">
+        <label for="new-app-idea">アイデア概要</label>
+        <textarea id="new-app-idea" rows="2"></textarea>
+      </div>
+      <div class="form-row form-row-split">
+        <div>
+          <label for="new-app-devai">開発AI</label>
+          <select id="new-app-devai">
+            <option value="未設定">未設定</option>
+            <option value="Claude Code">Claude Code</option>
+            <option value="Codex">Codex</option>
+            <option value="その他">その他</option>
+          </select>
+        </div>
+        <div>
+          <label for="new-app-stage">現在工程</label>
+          <select id="new-app-stage"></select>
+        </div>
+      </div>
+      <div class="form-row form-row-split">
+        <div>
+          <label for="new-app-progress">制作進捗（%）</label>
+          <input type="number" id="new-app-progress" min="0" max="100" step="1">
+        </div>
+        <div></div>
+      </div>
+      <div class="form-row form-row-split">
+        <div>
+          <label for="new-app-start">制作開始日</label>
+          <input type="date" id="new-app-start">
+        </div>
+        <div>
+          <label for="new-app-planned">公開予定日</label>
+          <input type="date" id="new-app-planned">
+        </div>
+      </div>
+      <div class="form-row">
+        <label for="new-app-next">次にやること</label>
+        <input type="text" id="new-app-next" placeholder="例：基本設計を書く">
+      </div>
+      <div class="form-row">
+        <label for="new-app-memo">メモ</label>
+        <textarea id="new-app-memo" rows="2"></textarea>
+      </div>
+      <div class="modal-actions">
+        <div class="modal-actions-right">
+          <button type="button" class="btn-secondary" id="add-app-cancel-btn">キャンセル</button>
+          <button type="submit" class="btn-primary">登録</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- アプリ詳細モーダル -->
+<div class="modal-overlay" id="detail-overlay">
+  <div class="modal modal-wide">
+    <div class="detail-header">
+      <h3><span id="detail-no" class="detail-no"></span><span id="detail-title">アプリ詳細</span></h3>
+      <button type="button" class="btn-danger btn-delete-app" id="detail-delete-btn">このアプリを削除</button>
+    </div>
+
+    <div class="detail-body">
+      <div class="detail-col">
+        <div class="form-row">
+          <label for="detail-name">アプリ名</label>
+          <input type="text" id="detail-name">
+        </div>
+        <div class="form-row">
+          <label for="detail-idea">アイデア概要</label>
+          <textarea id="detail-idea" rows="2"></textarea>
+        </div>
+        <div class="form-row form-row-split">
+          <div>
+            <label for="detail-devai">開発AI</label>
+            <select id="detail-devai">
+              <option value="未設定">未設定</option>
+              <option value="Claude Code">Claude Code</option>
+              <option value="Codex">Codex</option>
+              <option value="その他">その他</option>
+            </select>
+          </div>
+          <div>
+            <label for="detail-stage">現在工程</label>
+            <select id="detail-stage"></select>
+          </div>
+        </div>
+        <div class="form-row form-row-split">
+          <div>
+            <label for="detail-progress">制作進捗（%）</label>
+            <input type="number" id="detail-progress" min="0" max="100" step="1">
+          </div>
+          <div></div>
+        </div>
+        <div class="form-row form-row-split">
+          <div>
+            <label for="detail-start">制作開始日</label>
+            <input type="date" id="detail-start">
+          </div>
+          <div>
+            <label for="detail-planned">公開予定日</label>
+            <input type="date" id="detail-planned">
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="detail-published">公開日</label>
+          <input type="date" id="detail-published">
+        </div>
+        <div class="form-row">
+          <label for="detail-app-url">アプリURL</label>
+          <input type="text" id="detail-app-url" placeholder="https://...">
+        </div>
+        <div class="form-row">
+          <label for="detail-github-url">GitHub URL</label>
+          <input type="text" id="detail-github-url" placeholder="https://github.com/...">
+        </div>
+        <div class="form-row">
+          <label for="detail-next">次にやること</label>
+          <input type="text" id="detail-next">
+        </div>
+        <div class="form-row">
+          <label for="detail-memo">メモ</label>
+          <textarea id="detail-memo" rows="3"></textarea>
+        </div>
+      </div>
+
+      <div class="detail-col">
+        <div class="detail-outreach-block">
+          <h4>発信管理</h4>
+          <label class="checkbox-row"><input type="checkbox" id="detail-out-githubPages"> GitHub Pages公開<span class="tag-required">必須</span></label>
+          <label class="checkbox-row"><input type="checkbox" id="detail-out-x"> X投稿<span class="tag-required">必須</span></label>
+          <label class="checkbox-row"><input type="checkbox" id="detail-out-wordpress"> WordPress掲載<span class="tag-required">必須</span></label>
+          <label class="checkbox-row"><input type="checkbox" id="detail-out-note"> Note投稿<span class="tag-semi">準必須</span></label>
+          <label class="checkbox-row"><input type="checkbox" id="detail-out-youtube"> YouTube投稿<span class="tag-optional">任意</span></label>
+          <label class="checkbox-row"><input type="checkbox" id="detail-out-instagram"> Instagram投稿<span class="tag-optional">任意</span></label>
+          <p class="leak-note" id="detail-leak-note" hidden>⚠ 発信漏れ：GitHub Pages・X・WordPressのいずれかが未完了です</p>
+        </div>
+
+        <div class="fix-history-block">
+          <h4>修正・改善履歴</h4>
+          <ul class="fix-history-list" id="fix-history-list"></ul>
+          <form id="fix-history-form" class="fix-history-form">
+            <input type="text" id="fix-content" placeholder="修正内容" required>
+            <input type="date" id="fix-planned-date" title="修正予定日">
+            <select id="fix-status">
+              <option value="未着手">未着手</option>
+              <option value="修正中">修正中</option>
+              <option value="完了">完了</option>
+            </select>
+            <input type="date" id="fix-published-date" title="修正公開日">
+            <button type="submit" class="btn-secondary">追加</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <div class="modal-actions-right">
+        <button type="button" class="btn-primary" id="detail-close-btn">閉じる</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
