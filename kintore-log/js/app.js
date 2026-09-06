@@ -107,7 +107,7 @@
   var partFilterEl = document.getElementById("part-filter");
   var workoutFeedEl = document.getElementById("workout-feed");
   var weightListEl = document.getElementById("weight-list");
-  var exerciseOptionsEl = document.getElementById("exercise-options");
+  var exerciseSuggestionsEl = document.getElementById("exercise-suggestions");
 
   var addWorkoutBtn = document.getElementById("add-workout-btn");
   var workoutModalOverlay = document.getElementById("workout-modal-overlay");
@@ -135,6 +135,7 @@
 
   var editingWorkoutId = null;
   var editingWeightId = null;
+  var currentExerciseOptions = [];
 
   // ---------- 記録フィードの描画 ----------
 
@@ -152,11 +153,40 @@
       .forEach(function (w) {
         if (names.indexOf(w.exercise) === -1) names.push(w.exercise);
       });
-    exerciseOptionsEl.innerHTML = names
+    currentExerciseOptions = names;
+    hideExerciseSuggestions();
+  }
+
+  // 種目欄のすぐ下に、自前の候補リストを描画する（ネイティブdatalistは
+  // モーダル内（固定位置＋中央寄せ＋スクロール）だと表示位置がずれることがあるため使わない）
+  function renderExerciseSuggestions(filterText) {
+    var query = filterText.trim().toLowerCase();
+    var matches = currentExerciseOptions.filter(function (n) {
+      return !query || n.toLowerCase().indexOf(query) !== -1;
+    });
+
+    if (matches.length === 0) {
+      hideExerciseSuggestions();
+      return;
+    }
+
+    exerciseSuggestionsEl.innerHTML = matches
       .map(function (n) {
-        return '<option value="' + escapeHtml(n) + '"></option>';
+        return (
+          '<div class="exercise-suggestion-item" data-value="' +
+          escapeHtml(n) +
+          '">' +
+          escapeHtml(n) +
+          "</div>"
+        );
       })
       .join("");
+    exerciseSuggestionsEl.hidden = false;
+  }
+
+  function hideExerciseSuggestions() {
+    exerciseSuggestionsEl.hidden = true;
+    exerciseSuggestionsEl.innerHTML = "";
   }
 
   // 同じ種目の直近の記録を探し、「前回：60kg × 10回 × 3セット」のヒントを出す
@@ -470,7 +500,24 @@
     populateExerciseOptionsForPart(workoutPartInput.value);
     updatePrevRecordHint();
   });
-  workoutExerciseInput.addEventListener("input", updatePrevRecordHint);
+  workoutExerciseInput.addEventListener("input", function () {
+    renderExerciseSuggestions(workoutExerciseInput.value);
+    updatePrevRecordHint();
+  });
+  workoutExerciseInput.addEventListener("focus", function () {
+    renderExerciseSuggestions(workoutExerciseInput.value);
+  });
+  workoutExerciseInput.addEventListener("blur", hideExerciseSuggestions);
+  // mousedownでpreventDefaultすることで、候補クリック時に先にblurが発火して
+  // 候補リストが消えてしまうのを防ぐ
+  exerciseSuggestionsEl.addEventListener("mousedown", function (e) {
+    var item = e.target.closest(".exercise-suggestion-item");
+    if (!item) return;
+    e.preventDefault();
+    workoutExerciseInput.value = item.getAttribute("data-value");
+    hideExerciseSuggestions();
+    updatePrevRecordHint();
+  });
 
   addWeightBtn.addEventListener("click", function () {
     openWeightModal(null);
