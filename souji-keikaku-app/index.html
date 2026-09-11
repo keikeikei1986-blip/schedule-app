@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>お掃除月間予定表</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧹</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <h1>🧹 お掃除月間予定表</h1>
+  <p class="app-tagline">忘れがちな「定期掃除」を工程表で管理</p>
+</header>
+
+<main class="app-main">
+
+  <!-- ホーム -->
+  <section class="view" id="view-home">
+
+    <section class="dashboard">
+      <div class="dash-grid">
+        <div class="dash-item">
+          <span class="dash-value" id="dash-total">0</span>
+          <span class="dash-label">今月の予定</span>
+        </div>
+        <div class="dash-item dash-success">
+          <span class="dash-value" id="dash-done">0</span>
+          <span class="dash-label">完了</span>
+        </div>
+        <div class="dash-item">
+          <span class="dash-value" id="dash-remaining">0</span>
+          <span class="dash-label">残り</span>
+        </div>
+        <div class="dash-item dash-danger">
+          <span class="dash-value" id="dash-overdue">0</span>
+          <span class="dash-label">期限超過</span>
+        </div>
+      </div>
+      <div class="progress-row">
+        <span class="progress-row-label">今月の達成率</span>
+        <span class="progress-row-pct" id="dash-rate">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="dash-progress-fill"></div></div>
+    </section>
+
+    <section class="today-panel">
+      <h2 class="section-title">今日やる掃除</h2>
+      <div id="today-list" class="today-list" hidden></div>
+      <p class="empty-message" id="today-empty">今日やるべき掃除はありません。お疲れさまです 👍</p>
+    </section>
+
+    <section class="tasklist-panel">
+      <div class="panel-head">
+        <h2 class="section-title">今月の掃除予定一覧</h2>
+        <label class="hide-done-toggle">
+          <input type="checkbox" id="hide-done-checkbox">
+          完了を隠す
+        </label>
+      </div>
+      <div id="task-cards" class="task-cards" hidden></div>
+      <p class="empty-message" id="tasklist-empty">今月の掃除予定はまだありません。右下の＋から登録しましょう。</p>
+    </section>
+
+  </section>
+
+  <!-- カレンダー -->
+  <section class="view" id="view-calendar" hidden>
+    <div class="cal-header">
+      <button type="button" class="cal-nav-btn" id="cal-prev-btn" aria-label="前の月">‹</button>
+      <h2 class="cal-month-label" id="cal-month-label">-</h2>
+      <button type="button" class="cal-nav-btn" id="cal-next-btn" aria-label="次の月">›</button>
+    </div>
+    <div class="cal-weekdays">
+      <span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </section>
+
+  <!-- 履歴 -->
+  <section class="view" id="view-history" hidden>
+    <div class="history-head">
+      <h2 class="section-title">掃除履歴</h2>
+      <select id="history-filter-select">
+        <option value="">すべての項目</option>
+      </select>
+    </div>
+    <div id="history-list" class="history-list" hidden></div>
+    <p class="empty-message" id="history-empty">履歴はまだありません。</p>
+  </section>
+
+</main>
+
+<button type="button" class="fab" id="fab-add-btn" aria-label="掃除タスクを追加">＋</button>
+
+<nav class="tab-bar">
+  <button type="button" class="tab-btn is-active" data-view="home"><span class="tab-icon">🏠</span><span>ホーム</span></button>
+  <button type="button" class="tab-btn" data-view="calendar"><span class="tab-icon">📅</span><span>カレンダー</span></button>
+  <button type="button" class="tab-btn" data-view="history"><span class="tab-icon">🕘</span><span>履歴</span></button>
+</nav>
+
+<!-- 掃除タスク 追加・編集モーダル -->
+<div class="modal-overlay" id="task-modal-overlay" hidden>
+  <div class="modal">
+    <h3 id="task-modal-title">掃除タスクを追加</h3>
+    <form id="task-form">
+      <label for="task-name-input">掃除名</label>
+      <input type="text" id="task-name-input" placeholder="例：エアコンフィルター掃除" required>
+
+      <div class="field-row">
+        <div class="field-col">
+          <label for="task-category-input">カテゴリー</label>
+          <select id="task-category-input">
+            <option value="水回り">水回り</option>
+            <option value="キッチン">キッチン</option>
+            <option value="浴室">浴室</option>
+            <option value="窓・サッシ">窓・サッシ</option>
+            <option value="家電">家電</option>
+            <option value="玄関・ベランダ">玄関・ベランダ</option>
+            <option value="その他">その他</option>
+          </select>
+        </div>
+        <div class="field-col">
+          <label for="task-location-input">掃除する場所</label>
+          <input type="text" id="task-location-input" placeholder="例：リビング">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-col">
+          <label for="task-interval-input">掃除周期</label>
+          <select id="task-interval-input">
+            <option value="weekly">毎週</option>
+            <option value="biweekly">2週間ごと</option>
+            <option value="monthly" selected>毎月</option>
+            <option value="bimonthly">2か月ごと</option>
+            <option value="quarterly">3か月ごと</option>
+            <option value="halfyear">半年ごと</option>
+            <option value="yearly">1年ごと</option>
+            <option value="custom">任意</option>
+          </select>
+        </div>
+        <div class="field-col">
+          <label for="task-duration-input">所要時間目安（分）</label>
+          <input type="number" id="task-duration-input" min="1" value="30">
+        </div>
+      </div>
+
+      <label for="task-due-input">次回予定日</label>
+      <input type="date" id="task-due-input">
+
+      <label>担当予定者</label>
+      <div class="assignee-choice" id="task-assignee-choice">
+        <button type="button" class="assignee-btn" data-value="夫">夫</button>
+        <button type="button" class="assignee-btn" data-value="妻">妻</button>
+        <button type="button" class="assignee-btn" data-value="その他">その他</button>
+      </div>
+      <input type="text" id="task-assignee-other-input" class="assignee-other-input" placeholder="名前を入力" hidden>
+      <input type="hidden" id="task-assignee-value-input">
+
+      <label for="task-memo-input">掃除方法・注意事項メモ</label>
+      <textarea id="task-memo-input" rows="3" placeholder="例：フィルターは水洗い後、しっかり乾かす"></textarea>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-danger" id="task-delete-btn" hidden>削除</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn btn-secondary" id="task-cancel-btn">キャンセル</button>
+        <button type="submit" class="btn btn-primary">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 掃除完了モーダル -->
+<div class="modal-overlay" id="complete-modal-overlay" hidden>
+  <div class="modal">
+    <h3>掃除完了の記録</h3>
+    <p class="complete-modal-task-name" id="complete-modal-task-name"></p>
+    <form id="complete-form">
+      <label for="complete-date-input">掃除した日</label>
+      <input type="date" id="complete-date-input" required>
+
+      <label>誰が掃除しましたか？</label>
+      <div class="assignee-choice" id="complete-assignee-choice">
+        <button type="button" class="assignee-btn" data-value="夫">夫</button>
+        <button type="button" class="assignee-btn" data-value="妻">妻</button>
+        <button type="button" class="assignee-btn" data-value="その他">その他</button>
+      </div>
+      <input type="text" id="complete-assignee-other-input" class="assignee-other-input" placeholder="名前を入力" hidden>
+      <input type="hidden" id="complete-assignee-value-input">
+
+      <label for="complete-memo-input">メモ（任意）</label>
+      <textarea id="complete-memo-input" rows="2" placeholder="気づいたことがあれば"></textarea>
+
+      <div class="modal-actions">
+        <span class="spacer"></span>
+        <button type="button" class="btn btn-secondary" id="complete-cancel-btn">キャンセル</button>
+        <button type="submit" class="btn btn-primary">完了として記録</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- カレンダー日別詳細モーダル -->
+<div class="modal-overlay" id="day-modal-overlay" hidden>
+  <div class="modal">
+    <h3 id="day-modal-title">-</h3>
+    <div id="day-modal-list" class="day-modal-list"></div>
+    <div class="modal-actions">
+      <span class="spacer"></span>
+      <button type="button" class="btn btn-secondary" id="day-modal-close-btn">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,816 @@
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "souji-keikaku-app-v1";
+
+  var INTERVAL_LABELS = {
+    weekly: "毎週",
+    biweekly: "2週間ごと",
+    monthly: "毎月",
+    bimonthly: "2か月ごと",
+    quarterly: "3か月ごと",
+    halfyear: "半年ごと",
+    yearly: "1年ごと",
+    custom: "任意"
+  };
+
+  var STATUS_LABELS = {
+    overdue: "期限超過",
+    today: "今日",
+    soon: "もうすぐ",
+    scheduled: "予定",
+    done: "完了"
+  };
+
+  var STATUS_ORDER = { overdue: 0, today: 1, soon: 2, scheduled: 3, done: 4 };
+
+  var SOON_WITHIN_DAYS = 7;
+  var TODAY_PANEL_SOON_DAYS = 3;
+
+  var WEEKDAY_JP = ["日", "月", "火", "水", "木", "金", "土"];
+
+  var state = { tasks: [], logs: [] };
+
+  var editingTaskId = null;
+  var completingTaskId = null;
+  var calendarCursor = new Date();
+  calendarCursor.setDate(1);
+
+  // ---------- utils ----------
+
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  function pad2(n) {
+    return String(n).padStart(2, "0");
+  }
+
+  // ---------- date helpers ----------
+
+  function dateToStr(d) {
+    return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+  }
+
+  function todayStr() {
+    return dateToStr(new Date());
+  }
+
+  function parseDateStr(s) {
+    var parts = s.split("-").map(Number);
+    return new Date(parts[0], parts[1] - 1, parts[2]);
+  }
+
+  function monthKeyOf(dateStr) {
+    return dateStr.slice(0, 7);
+  }
+
+  function addDays(dateStr, n) {
+    var d = parseDateStr(dateStr);
+    d.setDate(d.getDate() + n);
+    return dateToStr(d);
+  }
+
+  function addMonthsClamped(dateStr, n) {
+    var d = parseDateStr(dateStr);
+    var targetIndex = d.getMonth() + n;
+    var targetYear = d.getFullYear() + Math.floor(targetIndex / 12);
+    var targetMonth = ((targetIndex % 12) + 12) % 12;
+    var lastDay = new Date(targetYear, targetMonth + 1, 0).getDate();
+    var day = Math.min(d.getDate(), lastDay);
+    return dateToStr(new Date(targetYear, targetMonth, day));
+  }
+
+  function addInterval(dateStr, intervalType) {
+    switch (intervalType) {
+      case "weekly": return addDays(dateStr, 7);
+      case "biweekly": return addDays(dateStr, 14);
+      case "monthly": return addMonthsClamped(dateStr, 1);
+      case "bimonthly": return addMonthsClamped(dateStr, 2);
+      case "quarterly": return addMonthsClamped(dateStr, 3);
+      case "halfyear": return addMonthsClamped(dateStr, 6);
+      case "yearly": return addMonthsClamped(dateStr, 12);
+      default: return "";
+    }
+  }
+
+  function formatMD(dateStr) {
+    var p = dateStr.split("-");
+    return Number(p[1]) + "/" + Number(p[2]);
+  }
+
+  function formatMDWithWeekday(dateStr) {
+    var d = parseDateStr(dateStr);
+    return formatMD(dateStr) + "(" + WEEKDAY_JP[d.getDay()] + ")";
+  }
+
+  function daysBetween(fromStr, toStr) {
+    var a = parseDateStr(fromStr);
+    var b = parseDateStr(toStr);
+    return Math.round((b - a) / 86400000);
+  }
+
+  // ---------- persistence ----------
+
+  function loadState() {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    try {
+      var parsed = JSON.parse(raw);
+      return {
+        tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
+        logs: Array.isArray(parsed.logs) ? parsed.logs : []
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function seedInitialTasks() {
+    var t = todayStr();
+    // [name, category, location, intervalType, dueOffsetDays, assignee, minutes, memo]
+    var seeds = [
+      ["エアコンフィルター掃除", "家電", "リビング", "monthly", 2, "夫", 20, "フィルターは水洗い後、しっかり乾かしてから戻す"],
+      ["レンジ内部掃除", "キッチン", "キッチン", "monthly", 10, "妻", 25, "焦げ付きは重曹ペーストでふやかしてから拭き取る"],
+      ["レンジフード掃除", "キッチン", "キッチン", "quarterly", 25, "夫", 40, "部品を外して中性洗剤につけ置き"],
+      ["浴室徹底掃除", "浴室", "浴室", "monthly", 0, "妻", 40, "天井のカビ防止に換気を忘れずに"],
+      ["洗面台徹底掃除", "水回り", "洗面所", "monthly", 6, "夫", 15, ""],
+      ["排水口掃除", "水回り", "キッチン・浴室", "biweekly", -2, "妻", 15, "ぬめりは早めに落とすと楽"],
+      ["洗濯機まわり掃除", "家電", "脱衣所", "monthly", 15, "夫", 20, "洗濯槽クリーナーは月1回使用"],
+      ["冷蔵庫内部掃除", "キッチン", "キッチン", "quarterly", 35, "妻", 30, "期限切れ食品のチェックも一緒に"],
+      ["窓掃除", "窓・サッシ", "各部屋", "halfyear", 40, "夫", 45, ""],
+      ["サッシ掃除", "窓・サッシ", "各部屋", "halfyear", 45, "妻", 40, "溝は歯ブラシで汚れをかき出す"],
+      ["玄関掃除", "玄関・ベランダ", "玄関", "monthly", -5, "夫", 15, ""],
+      ["ベランダ掃除", "玄関・ベランダ", "ベランダ", "quarterly", 20, "妻", 30, "排水口の詰まりも確認"]
+    ];
+    state.tasks = seeds.map(function (s) {
+      return {
+        id: uid(),
+        householdId: "default",
+        name: s[0],
+        category: s[1],
+        location: s[2],
+        intervalType: s[3],
+        nextDueDate: addDays(t, s[4]),
+        assignee: s[5],
+        estimatedMinutes: s[6],
+        memo: s[7],
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      };
+    });
+    state.logs = [];
+    saveState();
+  }
+
+  // ---------- derived data ----------
+
+  function getLogsForTask(taskId) {
+    return state.logs.filter(function (l) { return l.taskId === taskId; });
+  }
+
+  function getPreviousCompletedDate(taskId, excludeLogId) {
+    var logs = getLogsForTask(taskId).filter(function (l) { return l.id !== excludeLogId; });
+    if (!logs.length) return null;
+    return logs.reduce(function (max, l) {
+      return l.completedDate > max ? l.completedDate : max;
+    }, logs[0].completedDate);
+  }
+
+  function computeDueStatus(dueDateStr) {
+    var t = todayStr();
+    if (dueDateStr < t) return "overdue";
+    if (dueDateStr === t) return "today";
+    if (daysBetween(t, dueDateStr) <= SOON_WITHIN_DAYS) return "soon";
+    return "scheduled";
+  }
+
+  function getMonthlyEntries() {
+    var monthKey = monthKeyOf(todayStr());
+    var entries = [];
+    state.tasks.forEach(function (task) {
+      var logsThisMonth = state.logs.filter(function (l) {
+        return l.taskId === task.id && monthKeyOf(l.completedDate) === monthKey;
+      });
+      if (logsThisMonth.length) {
+        var latest = logsThisMonth.reduce(function (a, b) {
+          return b.completedDate > a.completedDate ? b : a;
+        });
+        entries.push({ task: task, status: "done", log: latest });
+      } else if (task.nextDueDate && monthKeyOf(task.nextDueDate) === monthKey) {
+        entries.push({ task: task, status: computeDueStatus(task.nextDueDate), log: null });
+      }
+    });
+    return entries;
+  }
+
+  function sortEntries(entries) {
+    return entries.slice().sort(function (a, b) {
+      var oa = STATUS_ORDER[a.status];
+      var ob = STATUS_ORDER[b.status];
+      if (oa !== ob) return oa - ob;
+      if (a.status === "done") {
+        return b.log.completedDate.localeCompare(a.log.completedDate);
+      }
+      return (a.task.nextDueDate || "").localeCompare(b.task.nextDueDate || "");
+    });
+  }
+
+  function getTodayPanelEntries() {
+    var t = todayStr();
+    var list = [];
+    state.tasks.forEach(function (task) {
+      if (!task.nextDueDate) return;
+      var status = computeDueStatus(task.nextDueDate);
+      if (status === "overdue" || status === "today") {
+        list.push({ task: task, status: status });
+      } else if (status === "soon" && daysBetween(t, task.nextDueDate) <= TODAY_PANEL_SOON_DAYS) {
+        list.push({ task: task, status: status });
+      }
+    });
+    list.sort(function (a, b) {
+      var oa = STATUS_ORDER[a.status];
+      var ob = STATUS_ORDER[b.status];
+      if (oa !== ob) return oa - ob;
+      return a.task.nextDueDate.localeCompare(b.task.nextDueDate);
+    });
+    return list;
+  }
+
+  // ---------- badge / dom helpers ----------
+
+  function el(tag, className, text) {
+    var e = document.createElement(tag);
+    if (className) e.className = className;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function statusBadge(status) {
+    return el("span", "badge badge-status-" + status, STATUS_LABELS[status]);
+  }
+
+  // ---------- rendering: dashboard ----------
+
+  function renderDashboard() {
+    var entries = getMonthlyEntries();
+    var total = entries.length;
+    var done = entries.filter(function (e) { return e.status === "done"; }).length;
+    var overdue = entries.filter(function (e) { return e.status === "overdue"; }).length;
+    var remaining = total - done;
+    var rate = total ? Math.round((done / total) * 100) : 0;
+
+    document.getElementById("dash-total").textContent = String(total);
+    document.getElementById("dash-done").textContent = String(done);
+    document.getElementById("dash-remaining").textContent = String(remaining);
+    document.getElementById("dash-overdue").textContent = String(overdue);
+    document.getElementById("dash-rate").textContent = rate + "%";
+    document.getElementById("dash-progress-fill").style.width = rate + "%";
+  }
+
+  // ---------- rendering: today panel ----------
+
+  function createTodayItemEl(entry) {
+    var task = entry.task;
+    var item = el("div", "today-item status-" + entry.status);
+
+    var body = el("div", "today-item-body");
+    body.appendChild(el("div", "today-item-title", task.name));
+    var metaText = STATUS_LABELS[entry.status] + "・予定日 " + formatMDWithWeekday(task.nextDueDate) +
+      "・担当 " + task.assignee;
+    body.appendChild(el("div", "today-item-meta", metaText));
+    item.appendChild(body);
+
+    var btn = el("button", "today-item-complete-btn", "✓ 完了");
+    btn.type = "button";
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      openCompleteModal(task);
+    });
+    item.appendChild(btn);
+
+    item.addEventListener("click", function () { openTaskModal(task); });
+
+    return item;
+  }
+
+  function renderTodayPanel() {
+    var list = getTodayPanelEntries();
+    var container = document.getElementById("today-list");
+    var empty = document.getElementById("today-empty");
+    container.innerHTML = "";
+
+    if (!list.length) {
+      container.hidden = true;
+      empty.hidden = false;
+      return;
+    }
+
+    container.hidden = false;
+    empty.hidden = true;
+    list.forEach(function (entry) { container.appendChild(createTodayItemEl(entry)); });
+  }
+
+  // ---------- rendering: task list ----------
+
+  function createTaskCardEl(entry) {
+    var task = entry.task;
+    var card = el("div", "task-card status-" + entry.status);
+
+    var top = el("div", "task-card-top");
+    top.appendChild(el("div", "task-card-name", task.name));
+    top.appendChild(statusBadge(entry.status));
+    card.appendChild(top);
+
+    var tags = el("div", "task-card-tags");
+    tags.appendChild(el("span", "badge", task.category));
+    if (task.location) tags.appendChild(el("span", "badge", task.location));
+    tags.appendChild(el("span", "badge", INTERVAL_LABELS[task.intervalType] || task.intervalType));
+    card.appendChild(tags);
+
+    var prevDate = getPreviousCompletedDate(task.id, entry.log ? entry.log.id : null);
+    var meta = el("div", "task-card-meta");
+    var dateLine;
+    if (entry.status === "done") {
+      dateLine = "実施日：" + formatMDWithWeekday(entry.log.completedDate) + "（担当：" + entry.log.completedBy + "）";
+    } else if (task.nextDueDate) {
+      dateLine = "予定日：" + formatMDWithWeekday(task.nextDueDate) + "（担当予定：" + task.assignee + "）";
+    } else {
+      dateLine = "次回予定日：未設定";
+    }
+    meta.appendChild(el("div", "", dateLine));
+    meta.appendChild(el("div", "", "前回掃除日：" + (prevDate ? formatMDWithWeekday(prevDate) : "初回")));
+    meta.appendChild(el("div", "", "所要時間目安：" + task.estimatedMinutes + "分"));
+    card.appendChild(meta);
+
+    if (task.memo) {
+      card.appendChild(el("div", "task-card-memo", task.memo));
+    }
+
+    var actions = el("div", "task-card-actions");
+    if (entry.status === "done") {
+      actions.appendChild(el("span", "task-card-done-note", "✓ 今月は完了済み"));
+    } else {
+      var btn = el("button", "task-card-complete-btn", "完了にする");
+      btn.type = "button";
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        openCompleteModal(task);
+      });
+      actions.appendChild(btn);
+    }
+    card.appendChild(actions);
+
+    card.addEventListener("click", function () { openTaskModal(task); });
+
+    return card;
+  }
+
+  function renderTaskList() {
+    var entries = sortEntries(getMonthlyEntries());
+    var hideDone = document.getElementById("hide-done-checkbox").checked;
+    if (hideDone) entries = entries.filter(function (e) { return e.status !== "done"; });
+
+    var container = document.getElementById("task-cards");
+    var empty = document.getElementById("tasklist-empty");
+    container.innerHTML = "";
+
+    if (!entries.length) {
+      container.hidden = true;
+      empty.hidden = false;
+      return;
+    }
+
+    container.hidden = false;
+    empty.hidden = true;
+    entries.forEach(function (entry) { container.appendChild(createTaskCardEl(entry)); });
+  }
+
+  // ---------- rendering: calendar ----------
+
+  function renderCalendar() {
+    var year = calendarCursor.getFullYear();
+    var month = calendarCursor.getMonth();
+    document.getElementById("cal-month-label").textContent = year + "年" + (month + 1) + "月";
+
+    var firstDay = new Date(year, month, 1);
+    var startWeekday = firstDay.getDay();
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    var grid = document.getElementById("cal-grid");
+    grid.innerHTML = "";
+
+    for (var i = 0; i < startWeekday; i++) {
+      grid.appendChild(el("div", "cal-cell cal-cell-empty"));
+    }
+
+    var t = todayStr();
+    for (var day = 1; day <= daysInMonth; day++) {
+      var dateStr = year + "-" + pad2(month + 1) + "-" + pad2(day);
+      var dueTasks = state.tasks.filter(function (task) { return task.nextDueDate === dateStr; });
+
+      var cell = document.createElement("button");
+      cell.type = "button";
+      cell.className = "cal-cell" + (dateStr === t ? " is-today" : "") + (dueTasks.length ? " has-events" : "");
+      cell.appendChild(el("span", "cal-day-num", String(day)));
+
+      var eventsWrap = el("div", "cal-events");
+      dueTasks.slice(0, 2).forEach(function (task) {
+        var chip = el("span", "cal-event-chip status-" + computeDueStatus(task.nextDueDate), task.name);
+        eventsWrap.appendChild(chip);
+      });
+      if (dueTasks.length > 2) {
+        eventsWrap.appendChild(el("span", "cal-event-more", "+" + (dueTasks.length - 2)));
+      }
+      cell.appendChild(eventsWrap);
+
+      cell.addEventListener("click", (function (ds) {
+        return function () { openDayModal(ds); };
+      })(dateStr));
+
+      grid.appendChild(cell);
+    }
+  }
+
+  // ---------- rendering: history ----------
+
+  function populateHistoryFilterOptions() {
+    var select = document.getElementById("history-filter-select");
+    var current = select.value;
+    select.innerHTML = "";
+    select.appendChild(new Option("すべての項目", ""));
+    state.tasks.slice().sort(function (a, b) { return a.name.localeCompare(b.name, "ja"); })
+      .forEach(function (task) { select.appendChild(new Option(task.name, task.id)); });
+    var stillValid = Array.prototype.some.call(select.options, function (o) { return o.value === current; });
+    select.value = stillValid ? current : "";
+  }
+
+  function createHistoryItemEl(log) {
+    var item = el("div", "history-item");
+    item.appendChild(el("div", "history-item-date", formatMDWithWeekday(log.completedDate)));
+
+    var body = el("div", "history-item-body");
+    body.appendChild(el("div", "history-item-name", log.taskName));
+    body.appendChild(el("div", "history-item-meta", "担当：" + log.completedBy));
+    if (log.memo) body.appendChild(el("div", "history-item-memo", log.memo));
+    item.appendChild(body);
+
+    var delBtn = el("button", "history-item-delete-btn", "×");
+    delBtn.type = "button";
+    delBtn.setAttribute("aria-label", "この履歴を削除");
+    delBtn.addEventListener("click", function () {
+      if (!confirm("この履歴を削除しますか？")) return;
+      state.logs = state.logs.filter(function (l) { return l.id !== log.id; });
+      saveState();
+      renderAll();
+    });
+    item.appendChild(delBtn);
+
+    return item;
+  }
+
+  function renderHistory() {
+    var filterTaskId = document.getElementById("history-filter-select").value;
+    var logs = state.logs.filter(function (l) { return !filterTaskId || l.taskId === filterTaskId; });
+    logs = logs.slice().sort(function (a, b) {
+      return b.completedDate.localeCompare(a.completedDate) || b.createdAt - a.createdAt;
+    });
+
+    var container = document.getElementById("history-list");
+    var empty = document.getElementById("history-empty");
+    container.innerHTML = "";
+
+    if (!logs.length) {
+      container.hidden = true;
+      empty.hidden = false;
+      return;
+    }
+
+    container.hidden = false;
+    empty.hidden = true;
+    logs.forEach(function (log) { container.appendChild(createHistoryItemEl(log)); });
+  }
+
+  // ---------- assignee choice widget ----------
+
+  function setupAssigneeChoiceHandlers(containerId, hiddenInputId, otherInputId) {
+    var container = document.getElementById(containerId);
+    var otherInput = document.getElementById(otherInputId);
+    var hiddenInput = document.getElementById(hiddenInputId);
+
+    Array.prototype.forEach.call(container.querySelectorAll(".assignee-btn"), function (btn) {
+      btn.addEventListener("click", function () {
+        Array.prototype.forEach.call(container.querySelectorAll(".assignee-btn"), function (b) {
+          b.classList.remove("is-active");
+        });
+        btn.classList.add("is-active");
+        var val = btn.dataset.value;
+        if (val === "その他") {
+          otherInput.hidden = false;
+          hiddenInput.value = otherInput.value.trim() || "その他";
+          otherInput.focus();
+        } else {
+          otherInput.hidden = true;
+          hiddenInput.value = val;
+        }
+      });
+    });
+
+    otherInput.addEventListener("input", function () {
+      hiddenInput.value = otherInput.value.trim() || "その他";
+    });
+  }
+
+  function setAssigneeValue(containerId, hiddenInputId, otherInputId, value) {
+    var container = document.getElementById(containerId);
+    var otherInput = document.getElementById(otherInputId);
+    var hiddenInput = document.getElementById(hiddenInputId);
+
+    Array.prototype.forEach.call(container.querySelectorAll(".assignee-btn"), function (b) {
+      b.classList.remove("is-active");
+    });
+
+    if (value === "夫" || value === "妻") {
+      var btn = container.querySelector('.assignee-btn[data-value="' + value + '"]');
+      if (btn) btn.classList.add("is-active");
+      hiddenInput.value = value;
+      otherInput.hidden = true;
+      otherInput.value = "";
+    } else {
+      var otherBtn = container.querySelector('.assignee-btn[data-value="その他"]');
+      if (otherBtn) otherBtn.classList.add("is-active");
+      otherInput.hidden = false;
+      otherInput.value = value || "";
+      hiddenInput.value = value || "その他";
+    }
+  }
+
+  function getAssigneeValue(hiddenInputId) {
+    return document.getElementById(hiddenInputId).value.trim();
+  }
+
+  // ---------- task modal ----------
+
+  function openTaskModal(task) {
+    editingTaskId = task ? task.id : null;
+    document.getElementById("task-modal-title").textContent = task ? "掃除タスクを編集" : "掃除タスクを追加";
+    document.getElementById("task-delete-btn").hidden = !task;
+
+    document.getElementById("task-name-input").value = task ? task.name : "";
+    document.getElementById("task-category-input").value = task ? task.category : "水回り";
+    document.getElementById("task-location-input").value = task ? task.location : "";
+    document.getElementById("task-interval-input").value = task ? task.intervalType : "monthly";
+    document.getElementById("task-duration-input").value = task ? task.estimatedMinutes : 30;
+    document.getElementById("task-due-input").value = task ? (task.nextDueDate || "") : todayStr();
+    document.getElementById("task-memo-input").value = task ? task.memo : "";
+    setAssigneeValue("task-assignee-choice", "task-assignee-value-input", "task-assignee-other-input", task ? task.assignee : "夫");
+
+    document.getElementById("task-modal-overlay").hidden = false;
+  }
+
+  function closeTaskModal() {
+    document.getElementById("task-modal-overlay").hidden = true;
+    editingTaskId = null;
+  }
+
+  function handleTaskFormSubmit(e) {
+    e.preventDefault();
+    var name = document.getElementById("task-name-input").value.trim();
+    if (!name) {
+      alert("掃除名を入力してください");
+      return;
+    }
+    var category = document.getElementById("task-category-input").value;
+    var location = document.getElementById("task-location-input").value.trim();
+    var intervalType = document.getElementById("task-interval-input").value;
+    var dueDate = document.getElementById("task-due-input").value;
+    var assignee = getAssigneeValue("task-assignee-value-input") || "夫";
+    var minutes = Math.max(1, Number(document.getElementById("task-duration-input").value) || 30);
+    var memo = document.getElementById("task-memo-input").value.trim();
+
+    if (editingTaskId) {
+      var task = state.tasks.find(function (t) { return t.id === editingTaskId; });
+      if (task) {
+        task.name = name;
+        task.category = category;
+        task.location = location;
+        task.intervalType = intervalType;
+        task.nextDueDate = dueDate;
+        task.assignee = assignee;
+        task.estimatedMinutes = minutes;
+        task.memo = memo;
+        task.updatedAt = Date.now();
+      }
+    } else {
+      state.tasks.push({
+        id: uid(),
+        householdId: "default",
+        name: name,
+        category: category,
+        location: location,
+        intervalType: intervalType,
+        nextDueDate: dueDate,
+        assignee: assignee,
+        estimatedMinutes: minutes,
+        memo: memo,
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      });
+    }
+
+    saveState();
+    closeTaskModal();
+    renderAll();
+  }
+
+  function handleDeleteTask() {
+    if (!editingTaskId) return;
+    if (!confirm("この掃除タスクを削除しますか？\n※過去の掃除履歴は残ります")) return;
+    state.tasks = state.tasks.filter(function (t) { return t.id !== editingTaskId; });
+    saveState();
+    closeTaskModal();
+    renderAll();
+  }
+
+  // ---------- complete modal ----------
+
+  function openCompleteModal(task) {
+    completingTaskId = task.id;
+    document.getElementById("complete-modal-task-name").textContent = task.name;
+    document.getElementById("complete-date-input").value = todayStr();
+    document.getElementById("complete-memo-input").value = "";
+    setAssigneeValue("complete-assignee-choice", "complete-assignee-value-input", "complete-assignee-other-input", task.assignee);
+    document.getElementById("complete-modal-overlay").hidden = false;
+  }
+
+  function closeCompleteModal() {
+    document.getElementById("complete-modal-overlay").hidden = true;
+    completingTaskId = null;
+  }
+
+  function handleCompleteSubmit(e) {
+    e.preventDefault();
+    var task = state.tasks.find(function (t) { return t.id === completingTaskId; });
+    if (!task) return;
+
+    var completedDate = document.getElementById("complete-date-input").value || todayStr();
+    var completedBy = getAssigneeValue("complete-assignee-value-input");
+    if (!completedBy) {
+      alert("誰が掃除したか選択してください");
+      return;
+    }
+    var memo = document.getElementById("complete-memo-input").value.trim();
+
+    state.logs.push({
+      id: uid(),
+      householdId: "default",
+      taskId: task.id,
+      taskName: task.name,
+      completedDate: completedDate,
+      completedBy: completedBy,
+      memo: memo,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    });
+
+    var lastDate = getPreviousCompletedDate(task.id, null);
+    if (completedDate >= (lastDate || "")) {
+      task.nextDueDate = addInterval(completedDate, task.intervalType);
+      task.updatedAt = Date.now();
+    }
+
+    saveState();
+    closeCompleteModal();
+    renderAll();
+  }
+
+  // ---------- day modal ----------
+
+  function createDayModalItemEl(task) {
+    var item = el("div", "day-modal-item");
+    var body = el("div", "day-modal-item-body");
+    body.appendChild(el("div", "day-modal-item-name", task.name));
+    body.appendChild(el("div", "day-modal-item-meta", task.category + "・担当予定：" + task.assignee));
+    item.appendChild(body);
+
+    var btn = el("button", "day-modal-item-complete-btn", "完了にする");
+    btn.type = "button";
+    btn.addEventListener("click", function () {
+      closeDayModal();
+      openCompleteModal(task);
+    });
+    item.appendChild(btn);
+
+    return item;
+  }
+
+  function openDayModal(dateStr) {
+    var d = parseDateStr(dateStr);
+    document.getElementById("day-modal-title").textContent =
+      (d.getMonth() + 1) + "月" + d.getDate() + "日(" + WEEKDAY_JP[d.getDay()] + ")の掃除予定";
+
+    var tasks = state.tasks.filter(function (t) { return t.nextDueDate === dateStr; });
+    var container = document.getElementById("day-modal-list");
+    container.innerHTML = "";
+
+    if (!tasks.length) {
+      container.appendChild(el("p", "empty-message", "この日の掃除予定はありません。"));
+    } else {
+      tasks.forEach(function (task) { container.appendChild(createDayModalItemEl(task)); });
+    }
+
+    document.getElementById("day-modal-overlay").hidden = false;
+  }
+
+  function closeDayModal() {
+    document.getElementById("day-modal-overlay").hidden = true;
+  }
+
+  // ---------- view switching ----------
+
+  function switchView(view) {
+    ["home", "calendar", "history"].forEach(function (v) {
+      document.getElementById("view-" + v).hidden = v !== view;
+    });
+    Array.prototype.forEach.call(document.querySelectorAll(".tab-btn"), function (btn) {
+      btn.classList.toggle("is-active", btn.dataset.view === view);
+    });
+  }
+
+  // ---------- render all ----------
+
+  function renderAll() {
+    renderDashboard();
+    renderTodayPanel();
+    renderTaskList();
+    renderCalendar();
+    populateHistoryFilterOptions();
+    renderHistory();
+  }
+
+  // ---------- init ----------
+
+  function init() {
+    var loaded = loadState();
+    if (loaded) {
+      state.tasks = loaded.tasks;
+      state.logs = loaded.logs;
+    } else {
+      seedInitialTasks();
+    }
+
+    setupAssigneeChoiceHandlers("task-assignee-choice", "task-assignee-value-input", "task-assignee-other-input");
+    setupAssigneeChoiceHandlers("complete-assignee-choice", "complete-assignee-value-input", "complete-assignee-other-input");
+
+    Array.prototype.forEach.call(document.querySelectorAll(".tab-btn"), function (btn) {
+      btn.addEventListener("click", function () { switchView(btn.dataset.view); });
+    });
+
+    document.getElementById("fab-add-btn").addEventListener("click", function () { openTaskModal(null); });
+
+    document.getElementById("task-form").addEventListener("submit", handleTaskFormSubmit);
+    document.getElementById("task-cancel-btn").addEventListener("click", closeTaskModal);
+    document.getElementById("task-delete-btn").addEventListener("click", handleDeleteTask);
+    document.getElementById("task-modal-overlay").addEventListener("click", function (e) {
+      if (e.target === this) closeTaskModal();
+    });
+
+    document.getElementById("complete-form").addEventListener("submit", handleCompleteSubmit);
+    document.getElementById("complete-cancel-btn").addEventListener("click", closeCompleteModal);
+    document.getElementById("complete-modal-overlay").addEventListener("click", function (e) {
+      if (e.target === this) closeCompleteModal();
+    });
+
+    document.getElementById("day-modal-close-btn").addEventListener("click", closeDayModal);
+    document.getElementById("day-modal-overlay").addEventListener("click", function (e) {
+      if (e.target === this) closeDayModal();
+    });
+
+    document.getElementById("cal-prev-btn").addEventListener("click", function () {
+      calendarCursor.setMonth(calendarCursor.getMonth() - 1);
+      renderCalendar();
+    });
+    document.getElementById("cal-next-btn").addEventListener("click", function () {
+      calendarCursor.setMonth(calendarCursor.getMonth() + 1);
+      renderCalendar();
+    });
+
+    document.getElementById("hide-done-checkbox").addEventListener("change", renderTaskList);
+    document.getElementById("history-filter-select").addEventListener("change", renderHistory);
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "Escape") return;
+      if (!document.getElementById("task-modal-overlay").hidden) closeTaskModal();
+      else if (!document.getElementById("complete-modal-overlay").hidden) closeCompleteModal();
+      else if (!document.getElementById("day-modal-overlay").hidden) closeDayModal();
+    });
+
+    renderAll();
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
