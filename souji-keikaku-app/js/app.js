@@ -143,42 +143,6 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }
 
-  function seedInitialTasks() {
-    var t = todayStr();
-    // [name, category, location, intervalType, dueOffsetDays, assignee, minutes, memo]
-    var seeds = [
-      ["エアコンフィルター掃除", "家電", "リビング", "monthly", 2, "夫", 20, "フィルターは水洗い後、しっかり乾かしてから戻す"],
-      ["レンジ内部掃除", "キッチン", "キッチン", "monthly", 10, "妻", 25, "焦げ付きは重曹ペーストでふやかしてから拭き取る"],
-      ["レンジフード掃除", "キッチン", "キッチン", "quarterly", 25, "夫", 40, "部品を外して中性洗剤につけ置き"],
-      ["浴室徹底掃除", "浴室", "浴室", "monthly", 0, "妻", 40, "天井のカビ防止に換気を忘れずに"],
-      ["洗面台徹底掃除", "水回り", "洗面所", "monthly", 6, "夫", 15, ""],
-      ["排水口掃除", "水回り", "キッチン・浴室", "biweekly", -2, "妻", 15, "ぬめりは早めに落とすと楽"],
-      ["洗濯機まわり掃除", "家電", "脱衣所", "monthly", 15, "夫", 20, "洗濯槽クリーナーは月1回使用"],
-      ["冷蔵庫内部掃除", "キッチン", "キッチン", "quarterly", 35, "妻", 30, "期限切れ食品のチェックも一緒に"],
-      ["窓掃除", "窓・サッシ", "各部屋", "halfyear", 40, "夫", 45, ""],
-      ["サッシ掃除", "窓・サッシ", "各部屋", "halfyear", 45, "妻", 40, "溝は歯ブラシで汚れをかき出す"],
-      ["玄関掃除", "玄関・ベランダ", "玄関", "monthly", -5, "夫", 15, ""],
-      ["ベランダ掃除", "玄関・ベランダ", "ベランダ", "quarterly", 20, "妻", 30, "排水口の詰まりも確認"]
-    ];
-    state.tasks = seeds.map(function (s) {
-      return {
-        id: uid(),
-        householdId: "default",
-        name: s[0],
-        category: s[1],
-        location: s[2],
-        intervalType: s[3],
-        nextDueDate: addDays(t, s[4]),
-        assignee: s[5],
-        estimatedMinutes: s[6],
-        memo: s[7],
-        createdAt: Date.now(),
-        updatedAt: Date.now()
-      };
-    });
-    state.logs = [];
-  }
-
   function deriveMembersFromExistingData() {
     var seen = {};
     var members = [];
@@ -831,8 +795,6 @@
       state.tasks = loaded.tasks;
       state.logs = loaded.logs;
       state.members = loaded.members;
-    } else {
-      seedInitialTasks();
     }
     if (!Array.isArray(state.members)) {
       state.members = deriveMembersFromExistingData();
