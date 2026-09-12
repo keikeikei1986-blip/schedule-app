@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>収穫・売上予測</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌾</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="app-header-row">
+    <div class="app-header-titles">
+      <h1>🌾 収穫・売上予測</h1>
+      <p class="app-tagline">この畑から、いくら穫れて、いくら売れそうか</p>
+    </div>
+    <button type="button" class="header-add-btn" id="header-add-btn" aria-label="圃場を追加">
+      <span aria-hidden="true">＋</span><span class="header-add-btn-label">圃場</span>
+    </button>
+  </div>
+</header>
+
+<main class="app-main">
+
+  <!-- ============ ダッシュボード ============ -->
+  <section class="view" id="view-dashboard">
+    <div id="dashboard-empty" class="empty-state" hidden>
+      <p>まだ圃場が登録されていません。</p>
+      <button type="button" class="btn-primary" id="dashboard-empty-add-btn">最初の圃場を登録する</button>
+    </div>
+
+    <div id="dashboard-content" hidden>
+      <div class="stat-grid">
+        <div class="stat-tile stat-tile-main">
+          <div class="stat-label">今年の予想総収穫量</div>
+          <div class="stat-value" id="stat-total-harvest">-</div>
+        </div>
+        <div class="stat-tile stat-tile-main">
+          <div class="stat-label">今年の予想総売上</div>
+          <div class="stat-value" id="stat-total-sales">-</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">今月の予想売上</div>
+          <div class="stat-value" id="stat-this-month">-</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">来月の予想売上</div>
+          <div class="stat-value" id="stat-next-month">-</div>
+        </div>
+      </div>
+
+      <section class="card">
+        <h2 class="card-title">💡 今年のポイント</h2>
+        <ul class="advice-list" id="advice-list"></ul>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">作物別 予想売上</h2>
+        <div class="crop-breakdown" id="crop-breakdown"></div>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">月別 予想売上</h2>
+        <div id="monthly-breakdown" class="monthly-breakdown"></div>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">圃場別 予想売上</h2>
+        <div id="field-breakdown" class="field-breakdown"></div>
+      </section>
+    </div>
+  </section>
+
+  <!-- ============ 圃場一覧 ============ -->
+  <section class="view" id="view-fields" hidden>
+    <div class="sort-bar">
+      <span class="sort-label">並び替え</span>
+      <button type="button" class="sort-btn active" data-sort="sales-desc">売上が多い順</button>
+      <button type="button" class="sort-btn" data-sort="harvest-asc">収穫が近い順</button>
+    </div>
+    <div id="fields-list" class="field-list"></div>
+    <div id="fields-empty" class="empty-state" hidden>
+      <p>まだ圃場が登録されていません。</p>
+      <button type="button" class="btn-primary" id="fields-empty-add-btn">最初の圃場を登録する</button>
+    </div>
+  </section>
+
+  <!-- ============ 圃場詳細 ============ -->
+  <section class="view" id="view-field-detail" hidden>
+    <div class="detail-topbar">
+      <button type="button" class="icon-btn" id="field-detail-back">← 一覧</button>
+      <h2 id="field-detail-title">圃場</h2>
+      <button type="button" class="icon-btn" id="field-detail-edit">編集</button>
+    </div>
+
+    <section class="card predict-card">
+      <h2 class="card-title">📈 予測結果</h2>
+      <div class="predict-block">
+        <div class="predict-block-label">予想収穫量</div>
+        <div class="predict-row">
+          <div class="predict-item"><span class="predict-item-label">最低</span><span class="predict-item-value" id="predict-harvest-min">-</span></div>
+          <div class="predict-item predict-item-main"><span class="predict-item-label">標準</span><span class="predict-item-value" id="predict-harvest-std">-</span></div>
+          <div class="predict-item"><span class="predict-item-label">最高</span><span class="predict-item-value" id="predict-harvest-max">-</span></div>
+        </div>
+      </div>
+      <div class="predict-block">
+        <div class="predict-block-label">予想売上</div>
+        <div class="predict-row">
+          <div class="predict-item"><span class="predict-item-label">最低</span><span class="predict-item-value" id="predict-sales-min">-</span></div>
+          <div class="predict-item predict-item-main"><span class="predict-item-label">標準</span><span class="predict-item-value" id="predict-sales-std">-</span></div>
+          <div class="predict-item"><span class="predict-item-label">最高</span><span class="predict-item-value" id="predict-sales-max">-</span></div>
+        </div>
+      </div>
+      <p class="predict-note" id="predict-note"></p>
+    </section>
+
+    <div class="segmented" id="field-detail-tabs">
+      <button type="button" class="seg-btn active" data-tab="basic">基本情報</button>
+      <button type="button" class="seg-btn" data-tab="history">過去実績</button>
+      <button type="button" class="seg-btn" data-tab="growth">生育状況</button>
+    </div>
+
+    <div class="tab-panel" id="tab-basic">
+      <dl class="info-list" id="field-info-list"></dl>
+    </div>
+
+    <div class="tab-panel" id="tab-history" hidden>
+      <button type="button" class="btn-primary btn-block" id="add-record-btn">＋ 過去実績を追加</button>
+      <div id="record-list" class="record-list"></div>
+    </div>
+
+    <div class="tab-panel" id="tab-growth" hidden>
+      <form id="growth-form">
+        <label class="field-label">生育状況
+          <select id="growth-status" class="field-input">
+            <option value="very_bad">非常に悪い</option>
+            <option value="bad">やや悪い</option>
+            <option value="normal">平年並み</option>
+            <option value="good">やや良い</option>
+            <option value="very_good">非常に良い</option>
+          </select>
+        </label>
+        <label class="field-label">病害虫の有無
+          <input type="text" id="growth-pest" class="field-input" placeholder="例：アブラムシがやや発生">
+        </label>
+        <label class="field-label">天候影響
+          <input type="text" id="growth-weather" class="field-input" placeholder="例：8月の高温で生育やや遅れ">
+        </label>
+        <label class="field-label">その他特記事項
+          <textarea id="growth-note" class="field-input" rows="2" placeholder="気づいたことを自由に記入"></textarea>
+        </label>
+
+        <hr class="field-divider">
+
+        <label class="field-label">今年の作付面積（a）
+          <input type="number" id="growth-area" class="field-input" step="0.1" min="0" placeholder="例：50">
+        </label>
+        <label class="field-label" id="growth-standard-yield-wrap">標準収量（10aあたり・kg）
+          <input type="number" id="growth-standard-yield" class="field-input" step="1" min="0" placeholder="例：380">
+          <span class="field-hint" id="growth-standard-yield-hint">過去実績がないため、この値を使って予測します</span>
+        </label>
+        <label class="field-label">販売予定単価（円/kg）
+          <input type="number" id="growth-price" class="field-input" step="1" min="0" placeholder="例：300">
+        </label>
+
+        <button type="submit" class="btn-primary btn-block">この内容で保存する</button>
+      </form>
+    </div>
+
+    <button type="button" class="btn-danger btn-block" id="field-delete-btn">この圃場を削除する</button>
+  </section>
+
+  <!-- ============ 圃場登録・編集フォーム ============ -->
+  <section class="view" id="view-field-form" hidden>
+    <div class="detail-topbar">
+      <button type="button" class="icon-btn" id="field-form-cancel">← 戻る</button>
+      <h2 id="field-form-title">圃場を登録</h2>
+      <span></span>
+    </div>
+    <form id="field-form">
+      <label class="field-label">圃場名 <span class="required">必須</span>
+        <input type="text" id="ff-name" class="field-input" required placeholder="例：A圃場">
+      </label>
+      <label class="field-label">作物 <span class="required">必須</span>
+        <select id="ff-crop" class="field-input">
+          <option value="negi">ネギ</option>
+          <option value="kome">米</option>
+        </select>
+      </label>
+      <label class="field-label">品種
+        <input type="text" id="ff-variety" class="field-input" placeholder="例：コシヒカリ">
+      </label>
+      <label class="field-label">面積（a） <span class="required">必須</span>
+        <input type="number" id="ff-area" class="field-input" step="0.1" min="0" required placeholder="例：50">
+      </label>
+      <label class="field-label">播種日
+        <input type="date" id="ff-seeding-date" class="field-input">
+      </label>
+      <label class="field-label" id="ff-planting-wrap">定植日
+        <input type="date" id="ff-planting-date" class="field-input">
+      </label>
+      <label class="field-label" id="ff-taue-wrap">田植え日
+        <input type="date" id="ff-taue-date" class="field-input">
+      </label>
+      <label class="field-label">収穫予定日
+        <input type="date" id="ff-harvest-date" class="field-input">
+      </label>
+      <label class="field-label">担当者
+        <input type="text" id="ff-manager" class="field-input" placeholder="例：father">
+      </label>
+      <label class="field-label">メモ
+        <textarea id="ff-memo" class="field-input" rows="2"></textarea>
+      </label>
+      <button type="submit" class="btn-primary btn-block">保存する</button>
+    </form>
+  </section>
+
+  <!-- ============ データ管理 ============ -->
+  <section class="view" id="view-data" hidden>
+    <section class="card">
+      <h2 class="card-title">💾 データのバックアップ</h2>
+      <p class="card-desc">登録した圃場・過去実績・生育状況のすべてを1つのファイルに書き出せます。機種変更や念のためのバックアップにお使いください。</p>
+      <button type="button" class="btn-primary btn-block" id="export-btn">JSONでエクスポート</button>
+    </section>
+    <section class="card">
+      <h2 class="card-title">📂 データの読み込み</h2>
+      <p class="card-desc">エクスポートしたJSONファイルを読み込みます。現在のデータは上書きされます。</p>
+      <input type="file" id="import-file" accept="application/json" class="field-input">
+      <button type="button" class="btn-primary btn-block" id="import-btn">JSONを読み込む（上書き）</button>
+    </section>
+    <section class="card">
+      <h2 class="card-title">🗑 データの初期化</h2>
+      <p class="card-desc">すべての圃場データを削除します。この操作は元に戻せません。</p>
+      <button type="button" class="btn-danger btn-block" id="clear-all-btn">すべて削除する</button>
+    </section>
+  </section>
+
+</main>
+
+<nav class="bottom-nav">
+  <button type="button" class="nav-btn active" data-view="dashboard"><span class="nav-icon">🏠</span><span class="nav-text">ホーム</span></button>
+  <button type="button" class="nav-btn" data-view="fields"><span class="nav-icon">🌱</span><span class="nav-text">圃場一覧</span></button>
+  <button type="button" class="nav-btn" data-view="data"><span class="nav-icon">💾</span><span class="nav-text">データ</span></button>
+</nav>
+
+<!-- 過去実績 追加・編集モーダル -->
+<div class="modal-overlay" id="record-modal-overlay" hidden>
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="record-modal-title">過去実績を追加</h3>
+      <button type="button" class="icon-btn" id="record-modal-close">✕</button>
+    </div>
+    <form id="record-form">
+      <label class="field-label">年度 <span class="required">必須</span>
+        <input type="number" id="rf-year" class="field-input" required placeholder="例：2025">
+      </label>
+      <label class="field-label">作付面積（a）
+        <input type="number" id="rf-area" class="field-input" step="0.1" min="0" placeholder="例：50">
+      </label>
+      <label class="field-label">収穫量（kg）
+        <input type="number" id="rf-harvest" class="field-input" step="1" min="0" placeholder="例：3800">
+      </label>
+      <label class="field-label">販売量（kg）
+        <input type="number" id="rf-sold" class="field-input" step="1" min="0" placeholder="例：3600">
+      </label>
+      <label class="field-label">平均販売単価（円/kg）
+        <input type="number" id="rf-price" class="field-input" step="1" min="0" placeholder="例：300">
+      </label>
+      <p class="computed-sales">売上（自動計算）：<strong id="rf-sales-computed">0円</strong></p>
+      <hr class="field-divider">
+      <label class="field-label">肥料費（円）
+        <input type="number" id="rf-fertilizer" class="field-input" step="1" min="0">
+      </label>
+      <label class="field-label">農薬費（円）
+        <input type="number" id="rf-pesticide" class="field-input" step="1" min="0">
+      </label>
+      <label class="field-label">人件費（円）
+        <input type="number" id="rf-labor" class="field-input" step="1" min="0">
+      </label>
+      <label class="field-label">その他経費（円）
+        <input type="number" id="rf-other" class="field-input" step="1" min="0">
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn-danger" id="record-delete-btn" hidden>削除</button>
+        <button type="submit" class="btn-primary">保存する</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
