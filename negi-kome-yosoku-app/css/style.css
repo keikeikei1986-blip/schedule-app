@@ -230,6 +230,13 @@ button, input, select, textarea {
   letter-spacing: -0.02em;
 }
 
+.stat-sublabel {
+  font-size: 11px;
+  color: var(--color-warn);
+  font-weight: 600;
+  margin-top: 4px;
+}
+
 .advice-list {
   margin: 0;
   padding-left: 0;
@@ -277,8 +284,15 @@ button, input, select, textarea {
 .badge-kome { background: var(--color-kome-bg); color: var(--color-kome); }
 
 .breakdown-value { font-weight: 800; font-size: 16px; }
+.breakdown-value-muted { font-weight: 700; font-size: 14px; color: var(--color-text-muted); }
 .breakdown-name { font-weight: 600; }
 .breakdown-sub { font-size: 12px; color: var(--color-text-muted); }
+
+.no-date-note {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
 
 .monthly-breakdown {
   display: flex;
@@ -313,11 +327,18 @@ button, input, select, textarea {
 }
 
 .month-value {
-  width: 84px;
+  width: auto;
+  min-width: 84px;
   text-align: right;
   font-weight: 700;
   font-size: 14px;
   flex-shrink: 0;
+}
+
+.month-missing {
+  font-weight: 600;
+  color: var(--color-warn);
+  font-size: 11px;
 }
 
 /* ---------- Field list ---------- */
@@ -390,6 +411,7 @@ button, input, select, textarea {
 }
 
 .field-card-sales { font-size: 18px; font-weight: 800; color: var(--color-primary); }
+.field-card-sales-muted { font-size: 14px; font-weight: 700; color: var(--color-text-muted); }
 
 .growth-badge {
   display: inline-flex;
@@ -465,10 +487,56 @@ button, input, select, textarea {
   font-weight: 800;
 }
 
-.predict-note {
-  margin: 8px 0 0;
+.predict-scale-note {
+  margin: -4px 0 12px;
   font-size: 12px;
   color: var(--color-text-muted);
+}
+
+.predict-basis {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  border-top: 1px solid #cfe8d1;
+  padding-top: 10px;
+}
+
+.predict-basis ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.predict-basis li {
+  margin-bottom: 5px;
+}
+
+.predict-missing {
+  margin-top: 12px;
+  background: #fdf0dc;
+  border: 1px solid #f0dcb0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: #7a5a1e;
+}
+
+.predict-missing p { margin: 0 0 10px; }
+
+.predict-missing-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.predict-missing-actions button {
+  background: #fff;
+  border: 1px solid #e0c98a;
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #7a5a1e;
+  cursor: pointer;
 }
 
 .segmented {
@@ -593,6 +661,13 @@ button, input, select, textarea {
   padding: 10px 14px;
   font-size: 15px;
   margin: -4px 0 16px;
+}
+
+.oversell-warning {
+  color: var(--color-danger);
+  font-weight: 600;
+  font-size: 13px;
+  margin: -12px 0 16px;
 }
 
 /* ---------- Modal ---------- */
