@@ -38,7 +38,7 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Segoe UI", sans-serif;
   background: var(--bg);
   color: var(--text);
-  padding-bottom: 96px;
+  padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
 }
 
 h1, h2, h3, p {
@@ -59,6 +59,17 @@ button {
   z-index: 5;
 }
 
+.app-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.app-header-titles {
+  min-width: 0;
+}
+
 .app-header h1 {
   font-size: 1.2rem;
   font-weight: 700;
@@ -69,6 +80,46 @@ button {
   margin-top: 4px;
   font-size: 0.78rem;
   color: var(--text-muted);
+}
+
+.header-add-btn {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.86rem;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 10px 14px;
+  min-height: 44px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.header-add-btn span:first-child {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.header-add-btn:hover {
+  background: var(--accent-dark);
+}
+
+@media (max-width: 400px) {
+  .header-add-btn-label {
+    display: none;
+  }
+
+  .header-add-btn {
+    padding: 10px 13px;
+  }
+
+  .app-header h1 {
+    font-size: 1.05rem;
+  }
 }
 
 .app-main {
@@ -171,6 +222,24 @@ button {
   margin-bottom: 10px;
 }
 
+.today-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.today-group-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+}
+
+.today-group-empty {
+  padding: 0;
+  margin: 0;
+}
+
 .today-list {
   display: flex;
   flex-direction: column;
@@ -226,12 +295,59 @@ button {
 }
 
 /* Task list */
-.panel-head {
+.tasklist-details {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 14px;
+}
+
+.tasklist-summary {
+  list-style: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
   gap: 8px;
+  padding: 12px 0;
+  cursor: pointer;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.tasklist-summary::-webkit-details-marker {
+  display: none;
+}
+
+.tasklist-summary::before {
+  content: "▸";
+  display: inline-block;
+  margin-right: 6px;
+  color: var(--text-faint);
+  transition: transform 0.15s ease;
+}
+
+.tasklist-details[open] .tasklist-summary::before {
+  transform: rotate(90deg);
+}
+
+.tasklist-summary-title {
+  flex: 1;
+}
+
+.tasklist-count {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--accent-dark);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+.tasklist-body {
+  padding: 2px 0 14px;
+  border-top: 1px solid var(--border);
 }
 
 .hide-done-toggle {
@@ -241,6 +357,7 @@ button {
   font-size: 0.76rem;
   color: var(--text-muted);
   white-space: nowrap;
+  margin: 12px 0 12px;
 }
 
 .hide-done-toggle input {
@@ -618,28 +735,6 @@ button {
   font-size: 1.15rem;
 }
 
-/* FAB */
-.fab {
-  position: fixed;
-  right: 18px;
-  bottom: 76px;
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  border: none;
-  background: var(--accent);
-  color: #fff;
-  font-size: 1.6rem;
-  line-height: 1;
-  box-shadow: 0 6px 16px rgba(15, 148, 136, 0.4);
-  cursor: pointer;
-  z-index: 16;
-}
-
-.fab:hover {
-  background: var(--accent-dark);
-}
-
 /* Modal */
 .modal-overlay {
   position: fixed;
@@ -719,31 +814,25 @@ button {
   min-width: 0;
 }
 
-.assignee-choice {
+.assignee-field select {
+  width: 100%;
+}
+
+.assignee-add-row {
   display: flex;
   gap: 8px;
-}
-
-.assignee-btn {
-  flex: 1;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  border-radius: 8px;
-  padding: 10px 4px;
-  font-size: 0.86rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-
-.assignee-btn.is-active {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-  color: var(--accent-dark);
-}
-
-.assignee-other-input {
   margin-top: 8px;
+}
+
+.assignee-add-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.btn-compact {
+  padding: 9px 14px;
+  font-size: 0.82rem;
+  flex: 0 0 auto;
 }
 
 .modal-actions {
@@ -801,10 +890,6 @@ button {
     border-radius: 14px 14px 0 0;
     border-left: 1px solid var(--border);
     border-right: 1px solid var(--border);
-  }
-
-  .fab {
-    right: calc(50% - 280px + 18px);
   }
 
   .modal-overlay {

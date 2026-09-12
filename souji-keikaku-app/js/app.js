@@ -25,16 +25,17 @@
   var STATUS_ORDER = { overdue: 0, today: 1, soon: 2, scheduled: 3, done: 4 };
 
   var SOON_WITHIN_DAYS = 7;
-  var TODAY_PANEL_SOON_DAYS = 3;
 
   var WEEKDAY_JP = ["日", "月", "火", "水", "木", "金", "土"];
 
-  var state = { tasks: [], logs: [] };
+  var state = { tasks: [], logs: [], members: null };
 
   var editingTaskId = null;
   var completingTaskId = null;
   var calendarCursor = new Date();
   calendarCursor.setDate(1);
+
+  var lastFocusedTrigger = null;
 
   // ---------- utils ----------
 
@@ -44,6 +45,13 @@
 
   function pad2(n) {
     return String(n).padStart(2, "0");
+  }
+
+  function el(tag, className, text) {
+    var e = document.createElement(tag);
+    if (className) e.className = className;
+    if (text !== undefined) e.textContent = text;
+    return e;
   }
 
   // ---------- date helpers ----------
@@ -110,6 +118,10 @@
     return Math.round((b - a) / 86400000);
   }
 
+  function formatAssignee(value) {
+    return value ? value : "未割り当て";
+  }
+
   // ---------- persistence ----------
 
   function loadState() {
@@ -119,7 +131,8 @@
       var parsed = JSON.parse(raw);
       return {
         tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
-        logs: Array.isArray(parsed.logs) ? parsed.logs : []
+        logs: Array.isArray(parsed.logs) ? parsed.logs : [],
+        members: Array.isArray(parsed.members) ? parsed.members : null
       };
     } catch (e) {
       return null;
@@ -164,7 +177,33 @@
       };
     });
     state.logs = [];
+  }
+
+  function deriveMembersFromExistingData() {
+    var seen = {};
+    var members = [];
+    function addName(name) {
+      var trimmed = (name || "").trim();
+      if (!trimmed || seen[trimmed]) return;
+      seen[trimmed] = true;
+      members.push({ id: uid(), name: trimmed, createdAt: Date.now() });
+    }
+    state.tasks.forEach(function (t) { addName(t.assignee); });
+    state.logs.forEach(function (l) { addName(l.completedBy); });
+    return members;
+  }
+
+  // ---------- members ----------
+
+  function addMemberIfNew(rawName) {
+    var trimmed = (rawName || "").trim();
+    if (!trimmed) return { ok: false, reason: "empty" };
+    var existing = state.members.find(function (m) { return m.name === trimmed; });
+    if (existing) return { ok: false, reason: "duplicate", member: existing };
+    var member = { id: uid(), name: trimmed, createdAt: Date.now() };
+    state.members.push(member);
     saveState();
+    return { ok: true, member: member };
   }
 
   // ---------- derived data ----------
@@ -220,38 +259,44 @@
     });
   }
 
-  function getTodayPanelEntries() {
-    var t = todayStr();
-    var list = [];
+  function getGroupedUpcoming() {
+    var overdue = [];
+    var today = [];
+    var soon = [];
     state.tasks.forEach(function (task) {
       if (!task.nextDueDate) return;
       var status = computeDueStatus(task.nextDueDate);
-      if (status === "overdue" || status === "today") {
-        list.push({ task: task, status: status });
-      } else if (status === "soon" && daysBetween(t, task.nextDueDate) <= TODAY_PANEL_SOON_DAYS) {
-        list.push({ task: task, status: status });
-      }
+      if (status === "overdue") overdue.push(task);
+      else if (status === "today") today.push(task);
+      else if (status === "soon") soon.push(task);
     });
-    list.sort(function (a, b) {
-      var oa = STATUS_ORDER[a.status];
-      var ob = STATUS_ORDER[b.status];
-      if (oa !== ob) return oa - ob;
-      return a.task.nextDueDate.localeCompare(b.task.nextDueDate);
-    });
-    return list;
+    function byDate(a, b) { return a.nextDueDate.localeCompare(b.nextDueDate); }
+    overdue.sort(byDate);
+    today.sort(byDate);
+    soon.sort(byDate);
+    return { overdue: overdue, today: today, soon: soon };
   }
 
-  // ---------- badge / dom helpers ----------
-
-  function el(tag, className, text) {
-    var e = document.createElement(tag);
-    if (className) e.className = className;
-    if (text !== undefined) e.textContent = text;
-    return e;
-  }
+  // ---------- badge helpers ----------
 
   function statusBadge(status) {
     return el("span", "badge badge-status-" + status, STATUS_LABELS[status]);
+  }
+
+  // ---------- keyboard-accessible card helper ----------
+
+  function makeActivatable(cardEl, ariaLabel, onActivate) {
+    cardEl.tabIndex = 0;
+    cardEl.setAttribute("role", "button");
+    cardEl.setAttribute("aria-label", ariaLabel);
+    cardEl.addEventListener("click", onActivate);
+    cardEl.addEventListener("keydown", function (e) {
+      if (e.target !== cardEl) return; // ignore events bubbled up from inner controls
+      if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
+        e.preventDefault();
+        onActivate();
+      }
+    });
   }
 
   // ---------- rendering: dashboard ----------
@@ -272,47 +317,61 @@
     document.getElementById("dash-progress-fill").style.width = rate + "%";
   }
 
-  // ---------- rendering: today panel ----------
+  // ---------- rendering: today panel (grouped) ----------
 
-  function createTodayItemEl(entry) {
-    var task = entry.task;
-    var item = el("div", "today-item status-" + entry.status);
+  function createTodayItemEl(task, statusClass) {
+    var item = el("div", "today-item status-" + statusClass);
 
     var body = el("div", "today-item-body");
     body.appendChild(el("div", "today-item-title", task.name));
-    var metaText = STATUS_LABELS[entry.status] + "・予定日 " + formatMDWithWeekday(task.nextDueDate) +
-      "・担当 " + task.assignee;
+    var metaText = "予定日 " + formatMDWithWeekday(task.nextDueDate) + "・担当 " + formatAssignee(task.assignee);
     body.appendChild(el("div", "today-item-meta", metaText));
     item.appendChild(body);
 
     var btn = el("button", "today-item-complete-btn", "✓ 完了");
     btn.type = "button";
+    btn.setAttribute("aria-label", task.name + "を完了にする");
     btn.addEventListener("click", function (e) {
       e.stopPropagation();
       openCompleteModal(task);
     });
     item.appendChild(btn);
 
-    item.addEventListener("click", function () { openTaskModal(task); });
+    makeActivatable(item, task.name + "の詳細を開く", function () { openTaskModal(task); });
 
     return item;
   }
 
-  function renderTodayPanel() {
-    var list = getTodayPanelEntries();
-    var container = document.getElementById("today-list");
-    var empty = document.getElementById("today-empty");
-    container.innerHTML = "";
+  function buildTodayGroupSection(label, tasks, statusClass, emptyText) {
+    var section = el("div", "today-group");
+    var countSuffix = tasks.length ? "（" + tasks.length + "）" : "";
+    section.appendChild(el("h3", "today-group-title", label + countSuffix));
 
-    if (!list.length) {
-      container.hidden = true;
-      empty.hidden = false;
-      return;
+    if (!tasks.length) {
+      section.appendChild(el("p", "empty-message today-group-empty", emptyText || ""));
+      return section;
     }
 
-    container.hidden = false;
-    empty.hidden = true;
-    list.forEach(function (entry) { container.appendChild(createTodayItemEl(entry)); });
+    var list = el("div", "today-list");
+    tasks.forEach(function (task) { list.appendChild(createTodayItemEl(task, statusClass)); });
+    section.appendChild(list);
+    return section;
+  }
+
+  function renderTodayPanel() {
+    var groups = getGroupedUpcoming();
+    var container = document.getElementById("today-groups");
+    container.innerHTML = "";
+
+    if (groups.overdue.length) {
+      container.appendChild(buildTodayGroupSection("期限超過", groups.overdue, "overdue"));
+    }
+
+    container.appendChild(buildTodayGroupSection("今日", groups.today, "today", "今日の掃除予定はありません"));
+
+    if (groups.soon.length) {
+      container.appendChild(buildTodayGroupSection("近日中（7日以内）", groups.soon, "soon"));
+    }
   }
 
   // ---------- rendering: task list ----------
@@ -338,7 +397,7 @@
     if (entry.status === "done") {
       dateLine = "実施日：" + formatMDWithWeekday(entry.log.completedDate) + "（担当：" + entry.log.completedBy + "）";
     } else if (task.nextDueDate) {
-      dateLine = "予定日：" + formatMDWithWeekday(task.nextDueDate) + "（担当予定：" + task.assignee + "）";
+      dateLine = "予定日：" + formatMDWithWeekday(task.nextDueDate) + "（担当予定：" + formatAssignee(task.assignee) + "）";
     } else {
       dateLine = "次回予定日：未設定";
     }
@@ -357,6 +416,7 @@
     } else {
       var btn = el("button", "task-card-complete-btn", "完了にする");
       btn.type = "button";
+      btn.setAttribute("aria-label", task.name + "を完了にする");
       btn.addEventListener("click", function (e) {
         e.stopPropagation();
         openCompleteModal(task);
@@ -365,13 +425,15 @@
     }
     card.appendChild(actions);
 
-    card.addEventListener("click", function () { openTaskModal(task); });
+    makeActivatable(card, task.name + "の詳細を編集", function () { openTaskModal(task); });
 
     return card;
   }
 
   function renderTaskList() {
     var entries = sortEntries(getMonthlyEntries());
+    document.getElementById("tasklist-count-badge").textContent = entries.length + "件";
+
     var hideDone = document.getElementById("hide-done-checkbox").checked;
     if (hideDone) entries = entries.filter(function (e) { return e.status !== "done"; });
 
@@ -416,6 +478,7 @@
       var cell = document.createElement("button");
       cell.type = "button";
       cell.className = "cal-cell" + (dateStr === t ? " is-today" : "") + (dueTasks.length ? " has-events" : "");
+      cell.setAttribute("aria-label", (month + 1) + "月" + day + "日の掃除予定を見る（" + dueTasks.length + "件）");
       cell.appendChild(el("span", "cal-day-num", String(day)));
 
       var eventsWrap = el("div", "cal-events");
@@ -461,7 +524,7 @@
 
     var delBtn = el("button", "history-item-delete-btn", "×");
     delBtn.type = "button";
-    delBtn.setAttribute("aria-label", "この履歴を削除");
+    delBtn.setAttribute("aria-label", log.taskName + "（" + formatMDWithWeekday(log.completedDate) + "）の履歴を削除");
     delBtn.addEventListener("click", function () {
       if (!confirm("この履歴を削除しますか？")) return;
       state.logs = state.logs.filter(function (l) { return l.id !== log.id; });
@@ -495,62 +558,59 @@
     logs.forEach(function (log) { container.appendChild(createHistoryItemEl(log)); });
   }
 
-  // ---------- assignee choice widget ----------
+  // ---------- assignee field (free-form members) ----------
 
-  function setupAssigneeChoiceHandlers(containerId, hiddenInputId, otherInputId) {
-    var container = document.getElementById(containerId);
-    var otherInput = document.getElementById(otherInputId);
-    var hiddenInput = document.getElementById(hiddenInputId);
-
-    Array.prototype.forEach.call(container.querySelectorAll(".assignee-btn"), function (btn) {
-      btn.addEventListener("click", function () {
-        Array.prototype.forEach.call(container.querySelectorAll(".assignee-btn"), function (b) {
-          b.classList.remove("is-active");
-        });
-        btn.classList.add("is-active");
-        var val = btn.dataset.value;
-        if (val === "その他") {
-          otherInput.hidden = false;
-          hiddenInput.value = otherInput.value.trim() || "その他";
-          otherInput.focus();
-        } else {
-          otherInput.hidden = true;
-          hiddenInput.value = val;
-        }
-      });
-    });
-
-    otherInput.addEventListener("input", function () {
-      hiddenInput.value = otherInput.value.trim() || "その他";
-    });
-  }
-
-  function setAssigneeValue(containerId, hiddenInputId, otherInputId, value) {
-    var container = document.getElementById(containerId);
-    var otherInput = document.getElementById(otherInputId);
-    var hiddenInput = document.getElementById(hiddenInputId);
-
-    Array.prototype.forEach.call(container.querySelectorAll(".assignee-btn"), function (b) {
-      b.classList.remove("is-active");
-    });
-
-    if (value === "夫" || value === "妻") {
-      var btn = container.querySelector('.assignee-btn[data-value="' + value + '"]');
-      if (btn) btn.classList.add("is-active");
-      hiddenInput.value = value;
-      otherInput.hidden = true;
-      otherInput.value = "";
-    } else {
-      var otherBtn = container.querySelector('.assignee-btn[data-value="その他"]');
-      if (otherBtn) otherBtn.classList.add("is-active");
-      otherInput.hidden = false;
-      otherInput.value = value || "";
-      hiddenInput.value = value || "その他";
+  function populateAssigneeSelect(selectId, selectedValue) {
+    var select = document.getElementById(selectId);
+    var current = selectedValue !== undefined ? selectedValue : select.value;
+    select.innerHTML = "";
+    select.appendChild(new Option("未割り当て", ""));
+    state.members.forEach(function (m) { select.appendChild(new Option(m.name, m.name)); });
+    if (current && !state.members.some(function (m) { return m.name === current; })) {
+      select.appendChild(new Option(current, current));
     }
+    select.value = current || "";
   }
 
-  function getAssigneeValue(hiddenInputId) {
-    return document.getElementById(hiddenInputId).value.trim();
+  function setupAssigneeField(selectId, newInputId, addBtnId) {
+    var newInput = document.getElementById(newInputId);
+
+    function doAdd() {
+      var result = addMemberIfNew(newInput.value);
+      if (!result.ok && result.reason === "empty") {
+        newInput.focus();
+        return;
+      }
+      populateAssigneeSelect(selectId, result.member.name);
+      newInput.value = "";
+      document.getElementById(selectId).focus();
+    }
+
+    document.getElementById(addBtnId).addEventListener("click", doAdd);
+    newInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        doAdd();
+      }
+    });
+  }
+
+  // ---------- modal focus helpers ----------
+
+  function openModalFocus(overlayEl, focusTarget) {
+    lastFocusedTrigger = document.activeElement;
+    overlayEl.hidden = false;
+    requestAnimationFrame(function () {
+      if (focusTarget) focusTarget.focus();
+    });
+  }
+
+  function closeModalFocus(overlayEl) {
+    overlayEl.hidden = true;
+    if (lastFocusedTrigger && typeof lastFocusedTrigger.focus === "function") {
+      lastFocusedTrigger.focus();
+    }
+    lastFocusedTrigger = null;
   }
 
   // ---------- task modal ----------
@@ -567,13 +627,14 @@
     document.getElementById("task-duration-input").value = task ? task.estimatedMinutes : 30;
     document.getElementById("task-due-input").value = task ? (task.nextDueDate || "") : todayStr();
     document.getElementById("task-memo-input").value = task ? task.memo : "";
-    setAssigneeValue("task-assignee-choice", "task-assignee-value-input", "task-assignee-other-input", task ? task.assignee : "夫");
+    document.getElementById("task-assignee-new-input").value = "";
+    populateAssigneeSelect("task-assignee-select", task ? task.assignee : "");
 
-    document.getElementById("task-modal-overlay").hidden = false;
+    openModalFocus(document.getElementById("task-modal-overlay"), document.getElementById("task-name-input"));
   }
 
   function closeTaskModal() {
-    document.getElementById("task-modal-overlay").hidden = true;
+    closeModalFocus(document.getElementById("task-modal-overlay"));
     editingTaskId = null;
   }
 
@@ -588,7 +649,7 @@
     var location = document.getElementById("task-location-input").value.trim();
     var intervalType = document.getElementById("task-interval-input").value;
     var dueDate = document.getElementById("task-due-input").value;
-    var assignee = getAssigneeValue("task-assignee-value-input") || "夫";
+    var assignee = document.getElementById("task-assignee-select").value;
     var minutes = Math.max(1, Number(document.getElementById("task-duration-input").value) || 30);
     var memo = document.getElementById("task-memo-input").value.trim();
 
@@ -643,12 +704,14 @@
     document.getElementById("complete-modal-task-name").textContent = task.name;
     document.getElementById("complete-date-input").value = todayStr();
     document.getElementById("complete-memo-input").value = "";
-    setAssigneeValue("complete-assignee-choice", "complete-assignee-value-input", "complete-assignee-other-input", task.assignee);
-    document.getElementById("complete-modal-overlay").hidden = false;
+    document.getElementById("complete-assignee-new-input").value = "";
+    populateAssigneeSelect("complete-assignee-select", task.assignee);
+
+    openModalFocus(document.getElementById("complete-modal-overlay"), document.getElementById("complete-date-input"));
   }
 
   function closeCompleteModal() {
-    document.getElementById("complete-modal-overlay").hidden = true;
+    closeModalFocus(document.getElementById("complete-modal-overlay"));
     completingTaskId = null;
   }
 
@@ -658,7 +721,7 @@
     if (!task) return;
 
     var completedDate = document.getElementById("complete-date-input").value || todayStr();
-    var completedBy = getAssigneeValue("complete-assignee-value-input");
+    var completedBy = document.getElementById("complete-assignee-select").value.trim();
     if (!completedBy) {
       alert("誰が掃除したか選択してください");
       return;
@@ -694,16 +757,23 @@
     var item = el("div", "day-modal-item");
     var body = el("div", "day-modal-item-body");
     body.appendChild(el("div", "day-modal-item-name", task.name));
-    body.appendChild(el("div", "day-modal-item-meta", task.category + "・担当予定：" + task.assignee));
+    body.appendChild(el("div", "day-modal-item-meta", task.category + "・担当予定：" + formatAssignee(task.assignee)));
     item.appendChild(body);
 
     var btn = el("button", "day-modal-item-complete-btn", "完了にする");
     btn.type = "button";
-    btn.addEventListener("click", function () {
+    btn.setAttribute("aria-label", task.name + "を完了にする");
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
       closeDayModal();
       openCompleteModal(task);
     });
     item.appendChild(btn);
+
+    makeActivatable(item, task.name + "の詳細を編集", function () {
+      closeDayModal();
+      openTaskModal(task);
+    });
 
     return item;
   }
@@ -723,11 +793,12 @@
       tasks.forEach(function (task) { container.appendChild(createDayModalItemEl(task)); });
     }
 
-    document.getElementById("day-modal-overlay").hidden = false;
+    var overlay = document.getElementById("day-modal-overlay");
+    openModalFocus(overlay, overlay.querySelector(".modal"));
   }
 
   function closeDayModal() {
-    document.getElementById("day-modal-overlay").hidden = true;
+    closeModalFocus(document.getElementById("day-modal-overlay"));
   }
 
   // ---------- view switching ----------
@@ -759,18 +830,23 @@
     if (loaded) {
       state.tasks = loaded.tasks;
       state.logs = loaded.logs;
+      state.members = loaded.members;
     } else {
       seedInitialTasks();
     }
+    if (!Array.isArray(state.members)) {
+      state.members = deriveMembersFromExistingData();
+    }
+    saveState();
 
-    setupAssigneeChoiceHandlers("task-assignee-choice", "task-assignee-value-input", "task-assignee-other-input");
-    setupAssigneeChoiceHandlers("complete-assignee-choice", "complete-assignee-value-input", "complete-assignee-other-input");
+    setupAssigneeField("task-assignee-select", "task-assignee-new-input", "task-assignee-add-btn");
+    setupAssigneeField("complete-assignee-select", "complete-assignee-new-input", "complete-assignee-add-btn");
 
     Array.prototype.forEach.call(document.querySelectorAll(".tab-btn"), function (btn) {
       btn.addEventListener("click", function () { switchView(btn.dataset.view); });
     });
 
-    document.getElementById("fab-add-btn").addEventListener("click", function () { openTaskModal(null); });
+    document.getElementById("header-add-btn").addEventListener("click", function () { openTaskModal(null); });
 
     document.getElementById("task-form").addEventListener("submit", handleTaskFormSubmit);
     document.getElementById("task-cancel-btn").addEventListener("click", closeTaskModal);

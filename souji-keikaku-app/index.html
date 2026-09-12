@@ -10,8 +10,15 @@
 <body>
 
 <header class="app-header">
-  <h1>🧹 お掃除月間予定表</h1>
-  <p class="app-tagline">忘れがちな「定期掃除」を工程表で管理</p>
+  <div class="app-header-row">
+    <div class="app-header-titles">
+      <h1>🧹 お掃除月間予定表</h1>
+      <p class="app-tagline">忘れがちな「定期掃除」を工程表で管理</p>
+    </div>
+    <button type="button" class="header-add-btn" id="header-add-btn" aria-label="掃除タスクを追加">
+      <span aria-hidden="true">＋</span><span class="header-add-btn-label">追加</span>
+    </button>
+  </div>
 </header>
 
 <main class="app-main">
@@ -47,20 +54,24 @@
 
     <section class="today-panel">
       <h2 class="section-title">今日やる掃除</h2>
-      <div id="today-list" class="today-list" hidden></div>
-      <p class="empty-message" id="today-empty">今日やるべき掃除はありません。お疲れさまです 👍</p>
+      <div id="today-groups" class="today-groups"></div>
     </section>
 
     <section class="tasklist-panel">
-      <div class="panel-head">
-        <h2 class="section-title">今月の掃除予定一覧</h2>
-        <label class="hide-done-toggle">
-          <input type="checkbox" id="hide-done-checkbox">
-          完了を隠す
-        </label>
-      </div>
-      <div id="task-cards" class="task-cards" hidden></div>
-      <p class="empty-message" id="tasklist-empty">今月の掃除予定はまだありません。右下の＋から登録しましょう。</p>
+      <details id="tasklist-details" class="tasklist-details">
+        <summary class="tasklist-summary">
+          <span class="tasklist-summary-title">今月の掃除予定一覧</span>
+          <span class="tasklist-count" id="tasklist-count-badge">0件</span>
+        </summary>
+        <div class="tasklist-body">
+          <label class="hide-done-toggle">
+            <input type="checkbox" id="hide-done-checkbox">
+            完了を隠す
+          </label>
+          <div id="task-cards" class="task-cards" hidden></div>
+          <p class="empty-message" id="tasklist-empty">今月の掃除予定はまだありません。右上の＋から登録しましょう。</p>
+        </div>
+      </details>
     </section>
 
   </section>
@@ -82,7 +93,7 @@
   <section class="view" id="view-history" hidden>
     <div class="history-head">
       <h2 class="section-title">掃除履歴</h2>
-      <select id="history-filter-select">
+      <select id="history-filter-select" aria-label="履歴の絞り込み">
         <option value="">すべての項目</option>
       </select>
     </div>
@@ -92,8 +103,6 @@
 
 </main>
 
-<button type="button" class="fab" id="fab-add-btn" aria-label="掃除タスクを追加">＋</button>
-
 <nav class="tab-bar">
   <button type="button" class="tab-btn is-active" data-view="home"><span class="tab-icon">🏠</span><span>ホーム</span></button>
   <button type="button" class="tab-btn" data-view="calendar"><span class="tab-icon">📅</span><span>カレンダー</span></button>
@@ -102,7 +111,7 @@
 
 <!-- 掃除タスク 追加・編集モーダル -->
 <div class="modal-overlay" id="task-modal-overlay" hidden>
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="task-modal-title" tabindex="-1">
     <h3 id="task-modal-title">掃除タスクを追加</h3>
     <form id="task-form">
       <label for="task-name-input">掃除名</label>
@@ -150,14 +159,14 @@
       <label for="task-due-input">次回予定日</label>
       <input type="date" id="task-due-input">
 
-      <label>担当予定者</label>
-      <div class="assignee-choice" id="task-assignee-choice">
-        <button type="button" class="assignee-btn" data-value="夫">夫</button>
-        <button type="button" class="assignee-btn" data-value="妻">妻</button>
-        <button type="button" class="assignee-btn" data-value="その他">その他</button>
+      <label for="task-assignee-select">担当予定者</label>
+      <div class="assignee-field">
+        <select id="task-assignee-select" aria-label="担当予定者"></select>
+        <div class="assignee-add-row">
+          <input type="text" id="task-assignee-new-input" placeholder="新しいメンバー名" aria-label="新しいメンバー名を入力">
+          <button type="button" id="task-assignee-add-btn" class="btn btn-secondary btn-compact">追加</button>
+        </div>
       </div>
-      <input type="text" id="task-assignee-other-input" class="assignee-other-input" placeholder="名前を入力" hidden>
-      <input type="hidden" id="task-assignee-value-input">
 
       <label for="task-memo-input">掃除方法・注意事項メモ</label>
       <textarea id="task-memo-input" rows="3" placeholder="例：フィルターは水洗い後、しっかり乾かす"></textarea>
@@ -174,21 +183,21 @@
 
 <!-- 掃除完了モーダル -->
 <div class="modal-overlay" id="complete-modal-overlay" hidden>
-  <div class="modal">
-    <h3>掃除完了の記録</h3>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="complete-modal-title" tabindex="-1">
+    <h3 id="complete-modal-title">掃除完了の記録</h3>
     <p class="complete-modal-task-name" id="complete-modal-task-name"></p>
     <form id="complete-form">
       <label for="complete-date-input">掃除した日</label>
       <input type="date" id="complete-date-input" required>
 
-      <label>誰が掃除しましたか？</label>
-      <div class="assignee-choice" id="complete-assignee-choice">
-        <button type="button" class="assignee-btn" data-value="夫">夫</button>
-        <button type="button" class="assignee-btn" data-value="妻">妻</button>
-        <button type="button" class="assignee-btn" data-value="その他">その他</button>
+      <label for="complete-assignee-select">誰が掃除しましたか？</label>
+      <div class="assignee-field">
+        <select id="complete-assignee-select" aria-label="誰が掃除しましたか"></select>
+        <div class="assignee-add-row">
+          <input type="text" id="complete-assignee-new-input" placeholder="新しいメンバー名" aria-label="新しいメンバー名を入力">
+          <button type="button" id="complete-assignee-add-btn" class="btn btn-secondary btn-compact">追加</button>
+        </div>
       </div>
-      <input type="text" id="complete-assignee-other-input" class="assignee-other-input" placeholder="名前を入力" hidden>
-      <input type="hidden" id="complete-assignee-value-input">
 
       <label for="complete-memo-input">メモ（任意）</label>
       <textarea id="complete-memo-input" rows="2" placeholder="気づいたことがあれば"></textarea>
@@ -204,7 +213,7 @@
 
 <!-- カレンダー日別詳細モーダル -->
 <div class="modal-overlay" id="day-modal-overlay" hidden>
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="day-modal-title" tabindex="-1">
     <h3 id="day-modal-title">-</h3>
     <div id="day-modal-list" class="day-modal-list"></div>
     <div class="modal-actions">
