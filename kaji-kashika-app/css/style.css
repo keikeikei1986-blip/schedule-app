@@ -1,0 +1,783 @@
+:root {
+  --bg: #f6f5f1;
+  --surface: #ffffff;
+  --text: #2b2b28;
+  --text-secondary: #7c7b74;
+  --text-tertiary: #b3b1a8;
+  --border: #e7e5de;
+  --accent: #4d7c6f;
+  --accent-soft: #e4ede9;
+  --husband: #4c7a9e;
+  --husband-soft: #e6eef4;
+  --wife: #b4694a;
+  --wife-soft: #f4e9e3;
+  --other: #8a8578;
+  --other-soft: #ece9e1;
+  --done-bg: #eef1ea;
+  --track: #e6e4da;
+  --danger: #c0392b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Hiragino Sans", "Yu Gothic", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- ヘッダー --- */
+
+.app-header {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 40px 20px 28px;
+  text-align: center;
+}
+
+.app-date {
+  margin: 0 0 4px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.app-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.app-subcopy {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* --- 共通カード --- */
+
+.card {
+  max-width: 480px;
+  margin: 0 auto 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px 20px;
+}
+
+.section-title {
+  margin: 0 0 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.settings-card .section-title {
+  text-align: left;
+}
+
+/* --- 今日の進捗 --- */
+
+.hero-card {
+  text-align: center;
+}
+
+.big-stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+}
+
+.big-stat-fraction {
+  font-size: 4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.big-stat-slash {
+  margin: 0 4px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+#total-count {
+  color: var(--text-secondary);
+}
+
+.big-stat-unit {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.big-stat-percent {
+  margin: 6px 0 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.task-count-sub {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.progress-message {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* --- 今日の分担（円グラフ） --- */
+
+.share-card {
+  text-align: center;
+}
+
+.pie-chart {
+  position: relative;
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  margin: 0 auto;
+  background: var(--track);
+}
+
+.pie-chart.mini {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+}
+
+.pie-chart-hole {
+  position: absolute;
+  inset: 18px;
+  background: var(--surface);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.pie-chart.mini .pie-chart-hole {
+  inset: 7px;
+}
+
+.pie-chart-hole-count {
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.pie-chart-hole-label {
+  margin-top: 2px;
+  font-size: 0.6rem;
+  color: var(--text-secondary);
+}
+
+.assignee-summary {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.assignee-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 16px;
+  border-radius: 16px;
+  background: var(--other-soft);
+  color: var(--other);
+  font-weight: 600;
+}
+
+.assignee-pill.husband {
+  background: var(--husband-soft);
+  color: var(--husband);
+}
+
+.assignee-pill.wife {
+  background: var(--wife-soft);
+  color: var(--wife);
+}
+
+.assignee-pill-points {
+  font-size: 1.15rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.assignee-pill-points .pt-unit {
+  margin-left: 1px;
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.assignee-pill-meta {
+  font-size: 0.68rem;
+  font-weight: 600;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+/* --- レイアウト --- */
+
+.view {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 20px 100px;
+}
+
+/* --- 時間帯サマリー --- */
+
+.time-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.time-summary-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 10px;
+  text-align: center;
+}
+
+.time-summary-icon {
+  font-size: 1.2rem;
+}
+
+.time-summary-fraction {
+  margin-top: 4px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.time-summary-fraction .slash {
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+.time-summary-fraction .pt-unit {
+  margin-left: 1px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.time-summary-tasks {
+  margin-top: 2px;
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
+}
+
+.time-summary-item.complete .time-summary-fraction {
+  color: var(--accent);
+}
+
+/* --- タスクグループ --- */
+
+.task-group {
+  margin-bottom: 26px;
+}
+
+.task-group-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.task-row.done {
+  background: var(--done-bg);
+}
+
+.task-row-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.task-checkbox {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  border: 2px solid var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  color: transparent;
+}
+
+.task-row.done .task-checkbox {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.task-name {
+  flex: 1 1 auto;
+  font-size: 0.98rem;
+}
+
+.task-row.done .task-name {
+  color: var(--text-tertiary);
+  text-decoration: line-through;
+}
+
+.task-points {
+  flex: 0 0 auto;
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.task-assignee-tag {
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--other-soft);
+  color: var(--other);
+}
+
+.task-assignee-tag.husband {
+  background: var(--husband-soft);
+  color: var(--husband);
+}
+
+.task-assignee-tag.wife {
+  background: var(--wife-soft);
+  color: var(--wife);
+}
+
+.task-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.task-picker-hint {
+  flex: 1 0 100%;
+  margin: 0 0 4px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.task-picker-btn {
+  flex: 1 1 0;
+  padding: 10px 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.task-picker-btn:active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.empty-state {
+  color: var(--text-tertiary);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 30px 0;
+}
+
+/* --- 記録（履歴） --- */
+
+.range-tabs {
+  max-width: 480px;
+  margin: 4px auto 20px;
+  display: flex;
+  gap: 8px;
+}
+
+.range-tab {
+  flex: 1 1 0;
+  padding: 10px 0;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.range-tab.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.history-summary-total {
+  margin: 0 0 16px;
+  font-size: 1.6rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.day-list {
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.day-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.day-card-date {
+  flex: 0 0 auto;
+  width: 68px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.day-card-stats {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.day-card-total {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.day-card-breakdown {
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.day-card-tasks-sub {
+  margin-top: 3px;
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  flex: 0 0 auto;
+}
+
+.dot.husband { background: var(--husband); }
+.dot.wife { background: var(--wife); }
+.dot.other { background: var(--other); }
+
+/* --- 設定 --- */
+
+.family-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.family-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.92rem;
+}
+
+.settings-note {
+  margin: -6px 0 14px;
+  font-size: 0.76rem;
+  color: var(--text-tertiary);
+}
+
+.edit-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.edit-group-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.edit-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.edit-task-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 6px 8px 8px;
+}
+
+.edit-task-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edit-task-points {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 4px;
+}
+
+.edit-task-points-label {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.points-stepper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.points-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  padding: 0;
+}
+
+.points-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.points-value {
+  min-width: 20px;
+  text-align: center;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.edit-task-name-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--text);
+  padding: 6px 4px;
+}
+
+.edit-task-name-input:focus {
+  outline: none;
+  background: var(--surface);
+  border-radius: 6px;
+}
+
+.reorder-btn,
+.delete-task-btn {
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 8px;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+}
+
+.reorder-btn {
+  width: 26px;
+  height: 26px;
+}
+
+.reorder-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.delete-task-btn {
+  padding: 6px 10px;
+  color: var(--danger);
+  font-weight: 600;
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+.delete-task-btn.armed {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+.add-task-btn {
+  width: 100%;
+  padding: 10px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.add-task-form {
+  display: flex;
+  gap: 6px;
+}
+
+.add-task-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 10px;
+  font: inherit;
+  font-size: 0.85rem;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.add-task-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.add-task-submit {
+  flex: 0 0 auto;
+  padding: 9px 16px;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.add-task-cancel {
+  flex: 0 0 auto;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+/* --- 下部ナビゲーション --- */
+
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 8px max(12px, env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-right));
+  z-index: 10;
+}
+
+.nav-btn {
+  flex: 1 1 0;
+  border: none;
+  background: transparent;
+  padding: 8px 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+
+.nav-btn.active {
+  color: var(--accent);
+}
+
+@media (max-width: 480px) {
+  .big-stat-fraction {
+    font-size: 3.2rem;
+  }
+}

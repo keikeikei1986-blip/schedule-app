@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HOME MILESTONES</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="app-header">
+  <p class="app-date" id="app-date">-</p>
+  <h1 class="app-title">HOME MILESTONES</h1>
+  <p class="app-subcopy">家庭の一日を、数字にする。</p>
+</header>
+
+<main class="view" id="view-today">
+  <section class="card hero-card">
+    <h2 class="section-title">今日の進捗</h2>
+    <div class="big-stat">
+      <span class="big-stat-fraction">
+        <span id="done-count">0</span><span class="big-stat-slash">/</span><span id="total-count">0</span>
+      </span>
+      <span class="big-stat-unit">pt</span>
+    </div>
+    <p class="big-stat-percent" id="percent-label">0% 完了</p>
+    <p class="task-count-sub" id="task-count-sub">0 / 0 タスク完了</p>
+    <p class="progress-message" id="progress-message">今日もここから。</p>
+  </section>
+
+  <section class="card share-card">
+    <h2 class="section-title">今日の分担</h2>
+    <div class="pie-chart" id="pie-chart">
+      <div class="pie-chart-hole">
+        <span class="pie-chart-hole-count" id="pie-total">0</span>
+        <span class="pie-chart-hole-label">pt</span>
+      </div>
+    </div>
+    <div class="assignee-summary" id="assignee-summary"></div>
+  </section>
+
+  <div class="time-summary" id="time-summary"></div>
+  <div class="task-groups" id="task-groups"></div>
+</main>
+
+<main class="view" id="view-history" hidden>
+  <div class="range-tabs" id="range-tabs">
+    <button type="button" class="range-tab active" data-range="today">今日</button>
+    <button type="button" class="range-tab" data-range="7">過去7日</button>
+    <button type="button" class="range-tab" data-range="30">過去30日</button>
+  </div>
+
+  <section class="card share-card">
+    <h2 class="section-title" id="history-summary-title">今日</h2>
+    <p class="history-summary-total" id="history-summary-total">0pt 完了</p>
+    <p class="task-count-sub" id="history-summary-tasks-sub">0 / 0 タスク完了</p>
+    <div class="pie-chart" id="history-pie-chart">
+      <div class="pie-chart-hole">
+        <span class="pie-chart-hole-count" id="history-pie-total">0</span>
+        <span class="pie-chart-hole-label">pt</span>
+      </div>
+    </div>
+    <div class="assignee-summary" id="history-legend"></div>
+  </section>
+
+  <div class="day-list" id="day-list"></div>
+</main>
+
+<main class="view" id="view-settings" hidden>
+  <section class="card settings-card">
+    <h2 class="section-title">家族</h2>
+    <ul class="family-list">
+      <li><span class="dot husband"></span>夫</li>
+      <li><span class="dot wife"></span>妻</li>
+      <li><span class="dot other"></span>その他</li>
+    </ul>
+  </section>
+
+  <section class="card settings-card">
+    <h2 class="section-title">タスクを編集</h2>
+    <p class="settings-note">ポイントは家族で相談して決めてください。</p>
+    <div class="edit-groups" id="edit-groups"></div>
+  </section>
+</main>
+
+<nav class="bottom-nav">
+  <button type="button" class="nav-btn active" data-view="today">今日</button>
+  <button type="button" class="nav-btn" data-view="history">記録</button>
+  <button type="button" class="nav-btn" data-view="settings">設定</button>
+</nav>
+
+<script src="js/app.js"></script>
+</body>
+</html>
